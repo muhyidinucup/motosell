@@ -89,10 +89,10 @@ export default function PublicHomepage() {
     window.open(`https://wa.me/${nomorWA}?text=${encodeURIComponent(teksPesan)}`, '_blank')
   }
 
-  // 🤝 SKENARIO 1: TRIGER LOGIKA WHATSAPP UNTUK ORANG YANG MAU JUAL MOTOR KE MOTOSELL
-  const handleSellMotorClick = () => {
+  // 🤝 SKENARIO 1: TOMBOL WA OTOMATIS JALAN UNTUK KONSUMEN YANG MAU JUAL MOTOR KE MOTOSELL
+  const handleSellToShowroomWA = () => {
     const nomorWA = storeConfig?.whatsapp_number || '6281234567890'
-    const teksFormat = `Halo Admin MotoSell, saya ingin menawarkan unit motor bekas milik saya dengan detail sebagai berikut:\n\n• *Nama Pemilik:* \n• *Merek & Tipe Motor:* \n• *Tahun Perakitan:* \n• *Kondisi / Minus Fisik:* \n• *Harga Penawaran:* Rp \n\nMohon info estimasi taksiran harga dan jadwal inspeksi unitnya ya Admin. Terima kasih!`
+    const teksFormat = `Halo Admin MotoSell, saya berencana mau menawarkan unit motor bekas saya untuk dijual ke showroom dengan detail berikut:\n\n• *Nama Pemilik:* \n• *Merek & Tipe Motor:* \n• *Tahun Perakitan:* \n• *Kondisi / Minus Fisik:* \n• *Harga Penawaran:* Rp \n\nMohon informasi perkiraan taksiran harga showroom dan jadwal inspeksi unitnya ya Admin. Terima kasih!`
     window.open(`https://wa.me/${nomorWA}?text=${encodeURIComponent(teksFormat)}`, '_blank')
   }
 
@@ -118,9 +118,9 @@ export default function PublicHomepage() {
             <Link href="/motors" className="hover:text-white transition">Katalog</Link>
             <a href="#tentang-kami" className="hover:text-white transition">Tentang Kami</a>
             
-            {/* Tombol Ajukan Jual Motor di Sisi Publik (Navbar) */}
+            {/* 🤝 Skenario 1: Tombol Akses Cepat Jual Motor di Navbar Publik */}
             <button 
-              onClick={handleSellMotorClick}
+              onClick={handleSellToShowroomWA}
               className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl border border-indigo-500/30 text-xs font-bold transition uppercase tracking-wider"
             >
               🤝 Jual Motor
@@ -177,7 +177,7 @@ export default function PublicHomepage() {
                 <span className="w-3 h-6 bg-indigo-500 rounded-full" />
                 Jelajahi Armada <span className="text-indigo-500">Ready Stock</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">Semua unit lulus inspection ketat dan surat-surat dijamin aman tembus.</p>
+              <p className="text-xs text-slate-400 mt-0.5">Semua unit lulus inspeksi ketat dan surat-surat dijamin aman tembus.</p>
             </div>
 
             <div className="relative w-full md:w-80">
@@ -294,10 +294,11 @@ export default function PublicHomepage() {
           )}
         </section>
 
-        {/* 🤝 SECTION CALL TO ACTION: UNTUK MASYARAKAT YANG MAU JUAL MOTOR KE MOTOSELL */}
+        {/* 🤝 BANNER BARU: SKENARIO 1 CALL-TO-ACTION UNTUK MASYARAKAT YANG MAU JUAL MOTOR KE SHOWROOM */}
         <section className="max-w-7xl mx-auto mt-20 px-4 sm:px-6">
           <div className="bg-gradient-to-r from-indigo-950 to-slate-900 border border-indigo-500/20 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl">
             <div className="space-y-2">
+              {/* 🔥 FIX SINTAKS: Tag penutup span yang sempat typo kemarin, kini sudah resmi ditutup dengan </span> */}
               <span className="inline-block text-[10px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
                 Mitra Kulakan Showroom
               </span>
@@ -309,7 +310,7 @@ export default function PublicHomepage() {
               </p>
             </div>
             <button
-              onClick={handleSellMotorClick}
+              onClick={handleSellToShowroomWA}
               className="w-full md:w-auto shrink-0 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-black rounded-xl transition shadow-lg uppercase tracking-wider text-center"
             >
               🤝 Ajukan Jual Motor
@@ -354,7 +355,7 @@ export default function PublicHomepage() {
                 MotoSell hadir sebagai showroom motor bekas modern yang mengutamakan kualitas armada dan kepuasan pelanggan. Kami memahami bahwa membeli kendaraan bekas seringkali memicu kekhawatiran, oleh karena itu setiap motor di MotoSell wajib melewati tahapan **12 Titik Inspeksi Fisik & Mesin** sebelum dipajang di etalase kami.
               </p>
               <p className="text-xs sm:text-sm text-slate-400 mt-3 leading-relaxed font-medium">
-                Dengan transparansi kondisi unit, jaminan surat-surat kendaraan asli tembus hukum, serta layanan purnajual berupa garansi mesin, kami berkomitmen memberikan pengalaman bertransaksi yang aman, nyaman, dan bebas rasa cemas bagi seluruh pelanggan kami.
+                Dengan transparansi condition unit, jaminan surat-surat kendaraan asli tembus hukum, serta layanan purnajual berupa garansi mesin, kami berkomitmen memberikan pengalaman bertransaksi yang aman, nyaman, dan bebas rasa cemas bagi seluruh pelanggan kami.
               </p>
             </div>
             
@@ -418,7 +419,7 @@ export default function PublicHomepage() {
             <h5 className="text-xs font-black uppercase tracking-widest text-slate-300 border-b border-slate-900 pb-2 max-w-[150px]">Ikuti Media Sosial</h5>
             <div className="flex items-center gap-3 text-slate-400">
               <a href={storeConfig?.instagram_url || 'https://instagram.com'} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 hover:bg-indigo-600 rounded-xl hover:text-white transition shadow-md"><Camera className="w-4 h-4" /></a>
-              <button onClick={handleSellMotorClick} className="p-2 bg-slate-900 hover:bg-indigo-600 rounded-xl hover:text-white transition shadow-md"><Phone className="w-4 h-4" /></button>
+              <button onClick={handleSellToShowroomWA} className="p-2 bg-slate-900 hover:bg-indigo-600 rounded-xl hover:text-white transition shadow-md"><Phone className="w-4 h-4" /></button>
             </div>
             <div className="pt-2 text-[10px] text-slate-500 flex items-center gap-1.5 font-medium">
               <ShieldAlert className="w-3.5 h-3.5 text-indigo-600" />
