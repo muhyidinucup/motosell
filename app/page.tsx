@@ -46,7 +46,7 @@ export default function PublicHomepage() {
   const [selectedBrand, setSelectedBrand] = useState('ALL')
   const [loading, setLoading] = useState(true)
 
-  // 🌟 STATE BARU: Untuk Mengontrol Laci Menu Hamburger Buka-Tutup di HP
+  // 🌟 STATE: Mengontrol Laci Menu Hamburger Buka-Tutup di HP
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -97,13 +97,13 @@ export default function PublicHomepage() {
     const nomorWA = storeConfig?.whatsapp_number || '6281234567890'
     const teksFormat = `Halo Admin MotoSell, saya berencana mau menawarkan unit motor bekas saya untuk dijual ke showroom dengan detail berikut:\n\n• *Nama Pemilik:* \n• *Merek & Tipe Motor:* \n• *Tahun Perakitan:* \n• *Kondisi / Minus Fisik:* \n• *Harga Penawaran:* Rp \n\nMohon informasi perkiraan taksiran harga showroom dan jadwal inspeksi unitnya ya Admin. Terima kasih!`
     window.open(`https://wa.me/${nomorWA}?text=${encodeURIComponent(teksFormat)}`, '_blank')
-    setIsMenuOpen(false) // Otomatis tutup laci menu setelah diklik
+    setIsMenuOpen(false) // Tutup laci menu otomatis
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center font-bold animate-pulse">
-        MEMUAT KATALOG ARMADA MOTOSELL...
+        MEMUAT KATALOG MOTOR MOTOSELL...
       </div>
     )
   }
@@ -112,14 +112,14 @@ export default function PublicHomepage() {
     <div className="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased flex flex-col justify-between">
       
       <div>
-        {/* 🧭 👑 REVISI NAVBAR: MENU HAMBURGER PREMIUM SEPERTI HALAMAN ADMIN */}
+        {/* 🧭 NAVBAR DENGAN MENU HAMBURGER PREMIUM */}
         <nav className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 sm:px-8 py-4 flex justify-between items-center max-w-7xl mx-auto rounded-b-2xl">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-indigo-600 rounded-xl text-white font-black shadow-lg shadow-indigo-600/30">MS</div>
             <h1 className="text-xl font-black tracking-wider text-white">MOTO<span className="text-indigo-500">SELL</span></h1>
           </div>
 
-          {/* 💻 TAMPILAN MENU LAPTOP / DESKTOP (Lebar & Utuh Panjang) */}
+          {/* 💻 MENU LAPTOP / DESKTOP */}
           <div className="hidden md:flex items-center gap-4 text-sm font-bold text-slate-400">
             <Link href="/motors" className="hover:text-white transition">Katalog</Link>
             <a href="#tentang-kami" className="hover:text-white transition">Tentang Kami</a>
@@ -134,7 +134,7 @@ export default function PublicHomepage() {
             <a href="/admin/dashboard" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 text-slate-200 text-xs font-semibold transition">Console Admin</a>
           </div>
 
-          {/* 📱 TAMPILAN TOMBOL HAMBURGER DI HP (Muncul Hanya di Layar Kecil) */}
+          {/* 📱 TOMBOL HAMBURGER DI HP */}
           <div className="md:hidden flex items-center">
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)} 
@@ -145,7 +145,7 @@ export default function PublicHomepage() {
           </div>
         </nav>
 
-        {/* 📱 LACI DROP-DOWN MENU HAMBURGER MOBILE (Hanya Terbuka Jika Klik Garis Tiga Di HP) */}
+        {/* 📱 LACI DROP-DOWN MENU HAMBURGER MOBILE */}
         {isMenuOpen && (
           <div className="md:hidden max-w-7xl mx-auto px-4 mt-2 sticky top-[73px] z-40 animate-in fade-in slide-in-from-top-4 duration-200">
             <div className="bg-slate-900/95 backdrop-blur-lg border border-slate-800 rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
@@ -195,11 +195,8 @@ export default function PublicHomepage() {
                 alt={banners[currentBanner]?.title}
                 className="w-full h-full object-cover select-none transition-all duration-700 ease-in-out" 
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-6 md:p-10">
-                <h2 className="text-lg sm:text-2xl md:text-4xl font-black tracking-tight text-white drop-shadow-md max-w-2xl bg-slate-950/60 p-3 sm:p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                  {banners[currentBanner]?.title}
-                </h2>
-              </div>
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/10 to-transparent p-6 md:p-10" />
 
               {banners.length > 1 && (
                 <>
@@ -227,7 +224,8 @@ export default function PublicHomepage() {
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
                 <span className="w-3 h-6 bg-indigo-500 rounded-full" />
-                Jelajahi Armada <span className="text-indigo-500">Ready Stock</span>
+                {/* 🌟 REVISI: Kata armada diubah menjadi Motor */}
+                Motor <span className="text-indigo-500">Ready Stock</span>
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">Semua unit lulus inspeksi ketat dan surat-surat dijamin aman tembus.</p>
             </div>
@@ -346,7 +344,7 @@ export default function PublicHomepage() {
           )}
         </section>
 
-        {/* 🤝 BANNER: SKENARIO 1 CALL-TO-ACTION UNTUK MASYARAKAT YANG MAU JUAL MOTOR KE SHOWROOM */}
+        {/* 🤝 BANNER: CALL-TO-ACTION UNTUK MASYARAKAT YANG MAU JUAL MOTOR KE SHOWROOM */}
         <section className="max-w-7xl mx-auto mt-20 px-4 sm:px-6">
           <div className="bg-gradient-to-r from-indigo-950 to-slate-900 border border-indigo-500/20 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl">
             <div className="space-y-2">
@@ -354,10 +352,12 @@ export default function PublicHomepage() {
                 Mitra Kulakan Showroom
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                {/* 🌟 REVISI: Kata armada diubah menjadi Motor */}
                 Mau Jual Motor Bekas Anda <span className="text-indigo-400">Dengan Harga Tinggi?</span>
               </h3>
               <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
-                Kami siap menampung armada motor bekas Anda! Proses cepat, taksiran harga transparan adil, dan tim inspektor kami siap datang ke lokasi. Klik ajukan penawaran via WhatsApp sekarang.
+                {/* 🌟 REVISI: Kata armada diubah menjadi motor */}
+                Kami siap menampung motor bekas Anda! Proses cepat, taksiran harga transparan adil, dan tim inspektor kami siap datang ke lokasi. Klik ajukan penawaran via WhatsApp sekarang.
               </p>
             </div>
             <button
@@ -403,7 +403,8 @@ export default function PublicHomepage() {
                 MotoSell: Solusi Jual Beli Motor Bekas <span className="text-indigo-500">Bergaransi & Tepercaya</span>
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 mt-4 leading-relaxed font-medium">
-                MotoSell hadir sebagai showroom motor bekas modern yang mengutamakan kualitas armada dan kepuasan pelanggan. Kami memahami bahwa membeli kendaraan bekas seringkali memicu kekhawatiran, oleh karena itu setiap motor di MotoSell wajib melewati tahapan **12 Titik Inspeksi Fisik & Mesin** sebelum dipajang di etalase kami.
+                {/* 🌟 REVISI: Kata armada diubah menjadi motor */}
+                MotoSell hadir sebagai showroom motor bekas modern yang mengutamakan kualitas motor dan kepuasan pelanggan. Kami memahami bahwa membeli kendaraan bekas seringkali memicu kekhawatiran, oleh karena itu setiap motor di MotoSell wajib melewati tahapan **12 Titik Inspeksi Fisik & Mesin** sebelum dipajang di etalase kami.
               </p>
               <p className="text-xs sm:text-sm text-slate-400 mt-3 leading-relaxed font-medium">
                 Dengan transparansi condition unit, jaminan surat-surat kendaraan asli tembus hukum, serta layanan purnajual berupa garansi mesin, kami berkomitmen memberikan pengalaman bertransaksi yang aman, nyaman, dan bebas rasa cemas bagi seluruh pelanggan kami.
