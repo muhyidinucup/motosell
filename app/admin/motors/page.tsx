@@ -241,17 +241,19 @@ export default function AdminMotorsPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900 rounded-3xl">
-      {/* 🏍️ Header Utama Responsif - Jarak Aman Bezel HP */}
+      {/* 🏍️ Header Utama Responsif dengan Racing Indigo Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-indigo-100 pb-6">
-        <div className="flex items-start gap-2.5">
+        <div className="flex items-start gap-2.5 max-w-full">
           {/* Aksen Garis Menyala Khas Racing */}
           <span className="w-3 h-7 bg-indigo-600 rounded-full shrink-0 mt-1 sm:mt-1.5" />
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-slate-900">
               <Bike className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600 shrink-0" />
-              Manajemen <span className="text-indigo-600">Motor & Inventori</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-none">
+                Manajemen <span className="text-indigo-600">Motor & Inventori</span>
+              </h1>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
               Kelola armada motor bekas, spesifikasi, dan status penjualan MotoSell.
             </p>
           </div>
@@ -266,13 +268,13 @@ export default function AdminMotorsPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form Box */}
-        <div className={`p-6 rounded-2xl shadow-xl border transition-all duration-300 text-white ${
+        {/* Form Box - Lebih Compact & Ramah Jempol Mobile */}
+        <div className={`p-5 sm:p-6 rounded-2xl shadow-xl border transition-all duration-300 text-white h-fit ${
           editingId 
             ? 'bg-amber-900 border-amber-700 shadow-amber-950/20' 
             : 'bg-slate-900 border-slate-800 shadow-slate-950/40'
         }`}>
-          <h2 className="text-sm font-extrabold mb-5 flex items-center gap-2 tracking-widest uppercase">
+          <h2 className="text-xs sm:text-sm font-extrabold mb-5 flex items-center gap-2 tracking-widest uppercase">
             <span className={`w-2.5 h-5 rounded-full ${editingId ? 'bg-amber-400' : 'bg-indigo-500'}`} />
             {editingId ? 'MODIFIKASI UNIT MOTOR' : 'DAFTARKAN UNIT MOTOR'}
           </h2>
@@ -297,7 +299,7 @@ export default function AdminMotorsPage() {
               <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Model / Tipe Motor</label>
               <input
                 type="text"
-                placeholder="Contoh: Vario 150 CBS"
+                placeholder="Contioh: Vario 150 CBS"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 required
@@ -331,7 +333,7 @@ export default function AdminMotorsPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Harga Pasang (Rp)</label>
+                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Harga (Rp)</label>
                 <input
                   type="number"
                   placeholder="Contoh: 17500000"
@@ -342,7 +344,7 @@ export default function AdminMotorsPage() {
                 />
               </div>
               <div>
-                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Jarak Tempuh (Km)</label>
+                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Jarak (Km)</label>
                 <input
                   type="number"
                   placeholder="Contoh: 24000"
@@ -368,7 +370,7 @@ export default function AdminMotorsPage() {
                 </select>
               </div>
               <div>
-                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Kondisi Unit</label>
+                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Kondisi</label>
                 <select
                   value={condition}
                   onChange={(e) => setCondition(e.target.value)}
@@ -381,6 +383,7 @@ export default function AdminMotorsPage() {
               </div>
             </div>
 
+            {/* FOTO DATABASE - PRATINJAU LEBIH RAPI DI HP */}
             {editingId && savedImages.length > 0 && (
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-amber-200 mb-1.5">Foto Terunggah di Database</label>
@@ -388,18 +391,16 @@ export default function AdminMotorsPage() {
                   {savedImages.map((img) => (
                     <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden bg-slate-800 border border-white/10 group">
                       <img src={img.image_url} alt="Database Unit" className="w-full h-full object-cover" />
-                      
                       <button
                         type="button"
                         onClick={() => handleImageDelete(img.id, img.image_url)}
                         title="Hapus foto ini"
-                        className="absolute top-1 right-1 p-1 bg-red-600 hover:bg-red-700 rounded-full text-white transition shadow shadow-black/50"
+                        className="absolute top-1 right-1 p-1 bg-red-600 hover:bg-red-700 rounded-full text-white transition shadow shadow-black/50 z-20"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-2.5 h-2.5" />
                       </button>
-
                       {img.is_primary && (
-                        <span className="absolute bottom-0 inset-x-0 bg-indigo-600 text-[7px] font-black uppercase text-center py-0.5 text-white">
+                        <span className="absolute bottom-0 inset-x-0 bg-indigo-600 text-[7px] font-black uppercase text-center py-0.5 text-white tracking-wide">
                           SAMPUL
                         </span>
                       )}
@@ -433,7 +434,7 @@ export default function AdminMotorsPage() {
                       <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-slate-800 border border-white/10">
                         <img src={src} alt="New Preview" className="w-full h-full object-cover" />
                         {index === 0 && !editingId && (
-                          <span className="absolute bottom-0 inset-x-0 bg-indigo-600 text-[8px] font-black uppercase text-center py-0.5 text-white">
+                          <span className="absolute bottom-0 inset-x-0 bg-indigo-600 text-[7px] font-black uppercase text-center py-0.5 text-white tracking-wide">
                             UTAMA
                           </span>
                         )}
@@ -517,11 +518,11 @@ export default function AdminMotorsPage() {
           </form>
         </div>
 
-        {/* Tabel Inventori */}
+        {/* Tabel Inventori - High Performance Padding Adaptif Mobile */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="p-6 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
+          <div className="p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
             <div>
-              <h2 className="text-lg font-bold tracking-wide">Inventori Motor Toko</h2>
+              <h2 className="text-base sm:text-lg font-bold tracking-wide">Inventori Motor Toko</h2>
               <p className="text-xs text-indigo-200/70 font-medium mt-0.5">Total unit terdata: {motors.length} unit</p>
             </div>
           </div>
@@ -530,15 +531,15 @@ export default function AdminMotorsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-100/80">
-                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Kode Unit</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Motor / Model</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Spesifikasi</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Harga Pasang</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
-                  <th className="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Operasi</th>
+                  <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Kode Unit</th>
+                  <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Motor / Model</th>
+                  <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Spesifikasi</th>
+                  <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Harga Pasang</th>
+                  <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                  <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Operasi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {motors.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-400 text-sm font-medium">
@@ -547,22 +548,22 @@ export default function AdminMotorsPage() {
                   </tr>
                 ) : (
                   motors.map((motor) => (
-                    <tr key={motor.id} className="hover:bg-indigo-50/40 transition-colors">
-                      <td className="py-4 px-4 text-sm font-bold font-mono text-indigo-600">{motor.motor_code}</td>
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-slate-900">{motor.model}</div>
-                        <div className="text-xs text-slate-400 font-medium">{motor.brands?.name}</div>
+                    <tr key={motor.id} className="hover:bg-indigo-50/30 transition-colors">
+                      <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-bold font-mono text-indigo-600">{motor.motor_code}</td>
+                      <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm">
+                        <div className="font-bold text-slate-900 tracking-tight">{motor.model}</div>
+                        <div className="text-[10px] sm:text-xs text-slate-400 font-medium">{motor.brands?.name}</div>
                       </td>
-                      <td className="py-4 px-4 text-xs space-y-0.5 text-slate-600 font-medium">
-                        <div className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Th {motor.year}</div>
-                        <div className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {motor.mileage.toLocaleString('id-ID')} Km</div>
-                        <div className="flex items-center gap-1"><Sliders className="w-3 h-3" /> {motor.transmission}</div>
+                      <td className="py-3 px-2 sm:px-4 text-[10px] sm:text-xs space-y-0.5 text-slate-500 font-semibold">
+                        <div className="flex items-center gap-1"><Calendar className="w-3 h-3 text-slate-400 shrink-0" /> Th {motor.year}</div>
+                        <div className="flex items-center gap-1"><Gauge className="w-3 h-3 text-slate-400 shrink-0" /> {motor.mileage.toLocaleString('id-ID')} Km</div>
+                        <div className="flex items-center gap-1"><Sliders className="w-3 h-3 text-slate-400 shrink-0" /> {motor.transmission}</div>
                       </td>
-                      <td className="py-4 px-4 text-sm font-extrabold text-slate-900">
+                      <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-extrabold text-slate-900 whitespace-nowrap">
                         Rp {motor.price.toLocaleString('id-ID')}
                       </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold shadow-sm ${
+                      <td className="py-3 px-2 sm:px-4 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-xs font-black shadow-sm tracking-wide ${
                           motor.status === 'ready' ? 'bg-green-100 text-green-800' :
                           motor.status === 'booking' ? 'bg-amber-100 text-amber-800' :
                           'bg-red-100 text-red-800'
@@ -570,21 +571,21 @@ export default function AdminMotorsPage() {
                           {motor.status.toUpperCase()}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="py-3 px-2 sm:px-4 text-center">
+                        <div className="flex items-center justify-center gap-1 sm:gap-1.5">
                           <button
                             onClick={() => handleEditClick(motor)}
                             title="Edit Spesifikasi/Status"
-                            className="p-2.5 bg-slate-100 hover:bg-amber-500 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60"
+                            className="p-1.5 sm:p-2 bg-slate-100 hover:bg-amber-500 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60"
                           >
-                            <Pencil className="w-4 h-4" />
+                            <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(motor.id, motor.motor_code)}
                             title="Hapus Unit"
-                            className="p-2.5 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60"
+                            className="p-1.5 sm:p-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       </td>
