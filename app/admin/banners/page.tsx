@@ -98,15 +98,21 @@ export default function AdminBannersPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900">
-      {/* Header */}
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900 rounded-3xl">
+      {/* 🏁 Header Utama Responsif dengan Racing Indigo Bar (Murni Manajemen Banner) */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-indigo-100 pb-6">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <ImageIcon className="w-8 h-8 text-indigo-600" />
-            Manajemen <span className="text-indigo-600">Banner Promo</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1 font-medium">Kelola gambar slide promosi diskon di halaman depan MotoSell.</p>
+        <div className="flex items-start gap-2.5">
+          {/* Aksen Garis Neon Premium */}
+          <span className="w-3 h-7 bg-indigo-600 rounded-full shrink-0 mt-1 sm:mt-1.5" />
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600 shrink-0" />
+              Manajemen <span className="text-indigo-600">Banner</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed">
+              Kelola gambar slide promosi diskon di halaman depan MotoSell.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -118,8 +124,8 @@ export default function AdminBannersPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Form Pendaftaran Spanduk */}
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl border border-slate-800 h-fit">
-          <h2 className="text-sm font-extrabold mb-5 flex items-center gap-2 tracking-widest uppercase">
+        <div className="bg-slate-900 text-white p-5 sm:p-6 rounded-2xl shadow-xl border border-slate-800 h-fit">
+          <h2 className="text-xs sm:text-sm font-extrabold mb-5 flex items-center gap-2 tracking-widest uppercase">
             <span className="w-2.5 h-5 rounded-full bg-indigo-500" />
             UNGGAH BANNER BARU
           </h2>
@@ -163,7 +169,6 @@ export default function AdminBannersPage() {
                 <span className="text-[10px] text-slate-500 mt-0.5">Rekomendasi rasio landscape (16:9)</span>
               </div>
 
-              {/* Preview Spanduk Mini */}
               {preview && (
                 <div className="mt-3 p-2 bg-black/20 rounded-xl border border-white/5">
                   <div className="relative aspect-[21/9] rounded-lg overflow-hidden border border-white/10">
@@ -185,14 +190,14 @@ export default function AdminBannersPage() {
 
         {/* Tabel List Banner Promosi */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="p-6 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
+          <div className="p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
             <div>
-              <h2 className="text-lg font-bold tracking-wide">Daftar Banner Berjalan</h2>
+              <h2 className="text-base sm:text-lg font-bold tracking-wide">Daftar Banner Berjalan</h2>
               <p className="text-xs text-indigo-200/70 font-medium mt-0.5">Total terpasang: {banners.length} spanduk aktif</p>
             </div>
           </div>
 
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50">
+          <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50">
             {banners.length === 0 ? (
               <div className="col-span-full py-12 text-center text-slate-400 text-sm font-medium">
                 Belum ada spanduk kampanye promosi iklan yang dipasang.
@@ -208,7 +213,7 @@ export default function AdminBannersPage() {
                   {/* Info Teks & Button Aksi */}
                   <div className="p-4 flex justify-between items-center gap-4 bg-white">
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-bold text-slate-900 text-sm truncate">{banner.title}</h3>
+                      <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">{banner.title}</h3>
                       {banner.link_url ? (
                         <a href={banner.link_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 font-semibold flex items-center gap-1 mt-0.5 hover:underline truncate">
                           <LinkIcon className="w-3 h-3 flex-shrink-0" /> Link Campaign
@@ -221,9 +226,9 @@ export default function AdminBannersPage() {
                     <button
                       onClick={() => handleDelete(banner.id, banner.image_url)}
                       title="Hapus Spanduk"
-                      className="p-2.5 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60 flex-shrink-0"
+                      className="p-2 sm:p-2.5 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60 flex-shrink-0"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
