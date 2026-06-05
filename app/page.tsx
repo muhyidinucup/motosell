@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { getActiveBanners, getReadyMotors } from '@/actions/public'
 import { getBrands } from '@/actions/brand'
 import { getStoreSettings } from '@/actions/settings' // 👈 Impor Karyawan Backend Settings
-import { Search, ShieldCheck, Fuel, Gauge, Award, MessageCircle, ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Phone, Mail, Camera, ShieldAlert } from 'lucide-react'
+import { Search, ShieldCheck, Fuel, Gauge, Award, MessageCircle, ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Phone, Mail, Camera, ShieldAlert, Menu, X } from 'lucide-react'
 
 interface Banner {
   id: number
@@ -45,6 +45,9 @@ export default function PublicHomepage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedBrand, setSelectedBrand] = useState('ALL')
   const [loading, setLoading] = useState(true)
+
+  // 🌟 STATE BARU: Untuk Mengontrol Laci Menu Hamburger Buka-Tutup di HP
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   useEffect(() => {
     async function loadPublicData() {
@@ -94,6 +97,7 @@ export default function PublicHomepage() {
     const nomorWA = storeConfig?.whatsapp_number || '6281234567890'
     const teksFormat = `Halo Admin MotoSell, saya berencana mau menawarkan unit motor bekas saya untuk dijual ke showroom dengan detail berikut:\n\n• *Nama Pemilik:* \n• *Merek & Tipe Motor:* \n• *Tahun Perakitan:* \n• *Kondisi / Minus Fisik:* \n• *Harga Penawaran:* Rp \n\nMohon informasi perkiraan taksiran harga showroom dan jadwal inspeksi unitnya ya Admin. Terima kasih!`
     window.open(`https://wa.me/${nomorWA}?text=${encodeURIComponent(teksFormat)}`, '_blank')
+    setIsMenuOpen(false) // Otomatis tutup laci menu setelah diklik
   }
 
   if (loading) {
@@ -108,17 +112,18 @@ export default function PublicHomepage() {
     <div className="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased flex flex-col justify-between">
       
       <div>
-        {/* 🧭 TOP BAR / NAVBAR MINIMALIS */}
+        {/* 🧭 👑 REVISI NAVBAR: MENU HAMBURGER PREMIUM SEPERTI HALAMAN ADMIN */}
         <nav className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 sm:px-8 py-4 flex justify-between items-center max-w-7xl mx-auto rounded-b-2xl">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-indigo-600 rounded-xl text-white font-black shadow-lg shadow-indigo-600/30">MS</div>
             <h1 className="text-xl font-black tracking-wider text-white">MOTO<span className="text-indigo-500">SELL</span></h1>
           </div>
-          <div className="flex items-center gap-4 text-xs sm:text-sm font-bold text-slate-400">
+
+          {/* 💻 TAMPILAN MENU LAPTOP / DESKTOP (Lebar & Utuh Panjang) */}
+          <div className="hidden md:flex items-center gap-4 text-sm font-bold text-slate-400">
             <Link href="/motors" className="hover:text-white transition">Katalog</Link>
             <a href="#tentang-kami" className="hover:text-white transition">Tentang Kami</a>
             
-            {/* 🤝 Skenario 1: Tombol Akses Cepat Jual Motor di Navbar Publik */}
             <button 
               onClick={handleSellToShowroomWA}
               className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl border border-indigo-500/30 text-xs font-bold transition uppercase tracking-wider"
@@ -128,7 +133,54 @@ export default function PublicHomepage() {
 
             <a href="/admin/dashboard" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 text-slate-200 text-xs font-semibold transition">Console Admin</a>
           </div>
+
+          {/* 📱 TAMPILAN TOMBOL HAMBURGER DI HP (Muncul Hanya di Layar Kecil) */}
+          <div className="md:hidden flex items-center">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              className="p-2 text-slate-400 hover:text-white bg-slate-800/50 rounded-xl border border-slate-700/50 transition focus:outline-none"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </nav>
+
+        {/* 📱 LACI DROP-DOWN MENU HAMBURGER MOBILE (Hanya Terbuka Jika Klik Garis Tiga Di HP) */}
+        {isMenuOpen && (
+          <div className="md:hidden max-w-7xl mx-auto px-4 mt-2 sticky top-[73px] z-40 animate-in fade-in slide-in-from-top-4 duration-200">
+            <div className="bg-slate-900/95 backdrop-blur-lg border border-slate-800 rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
+              <Link 
+                href="/motors" 
+                onClick={() => setIsMenuOpen(false)}
+                className="text-sm font-bold text-slate-300 hover:text-white bg-slate-950/40 p-3 rounded-xl border border-slate-800/40 transition"
+              >
+                🏍️ Katalog Motor
+              </Link>
+              <a 
+                href="#tentang-kami" 
+                onClick={() => setIsMenuOpen(false)}
+                className="text-sm font-bold text-slate-300 hover:text-white bg-slate-950/40 p-3 rounded-xl border border-slate-800/40 transition"
+              >
+                🏢 Tentang Kami
+              </a>
+              
+              <button 
+                onClick={handleSellToShowroomWA}
+                className="w-full text-left text-sm font-black text-indigo-400 hover:text-white bg-indigo-600/10 hover:bg-indigo-600 p-3 rounded-xl border border-indigo-500/20 transition uppercase tracking-wider"
+              >
+                🤝 Jual Motor Anda
+              </button>
+
+              <Link 
+                href="/admin/dashboard" 
+                onClick={() => setIsMenuOpen(false)}
+                className="text-sm font-bold text-slate-200 hover:text-white bg-white/5 hover:bg-white/10 p-3 rounded-xl border border-white/10 text-center transition"
+              >
+                ⚙️ Console Admin Panel
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* 🎬 DYNAMIC BANNER SLIDER SECTION */}
         <div className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 relative group">
@@ -294,11 +346,10 @@ export default function PublicHomepage() {
           )}
         </section>
 
-        {/* 🤝 BANNER BARU: SKENARIO 1 CALL-TO-ACTION UNTUK MASYARAKAT YANG MAU JUAL MOTOR KE SHOWROOM */}
+        {/* 🤝 BANNER: SKENARIO 1 CALL-TO-ACTION UNTUK MASYARAKAT YANG MAU JUAL MOTOR KE SHOWROOM */}
         <section className="max-w-7xl mx-auto mt-20 px-4 sm:px-6">
           <div className="bg-gradient-to-r from-indigo-950 to-slate-900 border border-indigo-500/20 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl">
             <div className="space-y-2">
-              {/* 🔥 FIX SINTAKS: Tag penutup span yang sempat typo kemarin, kini sudah resmi ditutup dengan </span> */}
               <span className="inline-block text-[10px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
                 Mitra Kulakan Showroom
               </span>
