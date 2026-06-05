@@ -186,7 +186,6 @@ export default function AdminMotorsPage() {
     await fetchSavedImages(motor.id)
   }
 
-  // Fungsi khusus memanggil daftar gambar milik unit
   async function fetchSavedImages(motorId: number) {
     try {
       const images = await getMotorImages(motorId)
@@ -196,13 +195,11 @@ export default function AdminMotorsPage() {
     }
   }
 
-  // Fungsi Aksi Hapus Gambar Satuan
   async function handleImageDelete(imageId: number, imageUrl: string) {
     if (!confirm('Apakah Anda yakin ingin menghapus foto ini dari galeri database?')) return
     
     try {
       await deleteMotorImage(imageId, imageUrl)
-      // Muat ulang daftar gambar di form edit secara realtime setelah sukses terhapus
       if (editingId) {
         await fetchSavedImages(editingId)
       }
@@ -243,15 +240,21 @@ export default function AdminMotorsPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900">
-      {/* Header Utama */}
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900 rounded-3xl">
+      {/* 🏍️ Header Utama Responsif - Jarak Aman Bezel HP */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-indigo-100 pb-6">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Bike className="w-8 h-8 text-indigo-600" />
-            Manajemen <span className="text-indigo-600">Motor & Inventori</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1 font-medium">Kelola armada motor bekas, spesifikasi, dan status penjualan MotoSell.</p>
+        <div className="flex items-start gap-2.5">
+          {/* Aksen Garis Menyala Khas Racing */}
+          <span className="w-3 h-7 bg-indigo-600 rounded-full shrink-0 mt-1 sm:mt-1.5" />
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <Bike className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600 shrink-0" />
+              Manajemen <span className="text-indigo-600">Motor & Inventori</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed">
+              Kelola armada motor bekas, spesifikasi, dan status penjualan MotoSell.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -378,7 +381,6 @@ export default function AdminMotorsPage() {
               </div>
             </div>
 
-            {/* FOTO DATABASE DENGAN TOMBOL HAPUS INDEPENDEN */}
             {editingId && savedImages.length > 0 && (
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-amber-200 mb-1.5">Foto Terunggah di Database</label>
@@ -387,7 +389,6 @@ export default function AdminMotorsPage() {
                     <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden bg-slate-800 border border-white/10 group">
                       <img src={img.image_url} alt="Database Unit" className="w-full h-full object-cover" />
                       
-                      {/* Tombol Hapus Pojok Atas */}
                       <button
                         type="button"
                         onClick={() => handleImageDelete(img.id, img.image_url)}
