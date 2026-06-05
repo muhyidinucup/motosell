@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getActiveBanners, getReadyMotors } from '@/actions/public'
 import { getBrands } from '@/actions/brand'
-import { getStoreSettings } from '@/actions/settings' 
+import { getStoreSettings } from '@/actions/settings' // 👈 Impor Karyawan Backend Settings
 import { Search, ShieldCheck, Fuel, Gauge, Award, MessageCircle, ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Phone, Mail, Camera, ShieldAlert } from 'lucide-react'
 
 interface Banner {
@@ -39,7 +39,7 @@ export default function PublicHomepage() {
   const [banners, setBanners] = useState<Banner[]>([])
   const [motors, setMotors] = useState<Motor[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
-  const [storeConfig, setStoreConfig] = useState<any>(null) 
+  const [storeConfig, setStoreConfig] = useState<any>(null) // 👈 State Penampung Pengaturan Toko Dinamis
   
   const [currentBanner, setCurrentBanner] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
@@ -53,7 +53,7 @@ export default function PublicHomepage() {
           getActiveBanners(),
           getReadyMotors(),
           getBrands(),
-          getStoreSettings() 
+          getStoreSettings() // 👈 Tarik data live dari tabel settings
         ])
         setBanners(bannersData as Banner[])
         setMotors(motorsData as unknown as Motor[])
@@ -84,21 +84,21 @@ export default function PublicHomepage() {
   })
 
   const handleWhatsAppClick = (motor: Motor) => {
-    const nomorWA = storeConfig?.whatsapp_number || '6281234567890' 
+    const nomorWA = storeConfig?.whatsapp_number || '6281234567890' // 👈 Otomatis Ambil dari Database
     const teksPesan = `Halo Admin MotoSell, saya tertarik dan ingin menanyakan unit yang ada di website:\n\n*Unit:* ${motor.brands?.name} ${motor.model}\n*Kode:* ${motor.motor_code}\n*Harga:* Rp ${motor.price.toLocaleString('id-ID')}\n\nApakah unit ini masih ready untuk di-cek ke lokasi? Terima kasih.`
     window.open(`https://wa.me/${nomorWA}?text=${encodeURIComponent(teksPesan)}`, '_blank')
   }
 
-  // 🤝 FORMULA SAKTI: REDIRECT WA UNTUK KONSUMEN YANG MAU JUAL MOTOR KE MOTOSELL
-  const handleSellToShowroomClick = () => {
+  // 🤝 SKENARIO 1: TRIGER LOGIKA WHATSAPP UNTUK ORANG YANG MAU JUAL MOTOR KE MOTOSELL
+  const handleSellMotorClick = () => {
     const nomorWA = storeConfig?.whatsapp_number || '6281234567890'
-    const teksJual = `Halo Admin MotoSell, saya ingin menawarkan unit motor bekas saya untuk dijual ke showroom dengan detail berikut:\n\n• *Nama Pemilik:* \n• *Merek & Tipe Motor:* \n• *Tahun Perakitan:* \n• *Kondisi / Minus Fisik:* \n• *Harga Penawaran:* Rp \n\nMohon informasi estimasi harga taksiran dan jadwal inspeksi unit ya Admin. Terima kasih!`
-    window.open(`https://wa.me/${nomorWA}?text=${encodeURIComponent(teksJual)}`, '_blank')
+    const teksFormat = `Halo Admin MotoSell, saya ingin menawarkan unit motor bekas milik saya dengan detail sebagai berikut:\n\n• *Nama Pemilik:* \n• *Merek & Tipe Motor:* \n• *Tahun Perakitan:* \n• *Kondisi / Minus Fisik:* \n• *Harga Penawaran:* Rp \n\nMohon info estimasi taksiran harga dan jadwal inspeksi unitnya ya Admin. Terima kasih!`
+    window.open(`https://wa.me/${nomorWA}?text=${encodeURIComponent(teksFormat)}`, '_blank')
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center font-bold animate-pulse tracking-widest text-xs sm:text-sm">
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center font-bold animate-pulse">
         MEMUAT KATALOG ARMADA MOTOSELL...
       </div>
     )
@@ -108,30 +108,32 @@ export default function PublicHomepage() {
     <div className="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased flex flex-col justify-between">
       
       <div>
-        {/* 🧭 NAVIGATION BAR RESPONSIVE PREMIUM */}
-        <nav className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 sm:px-6 py-4 flex justify-between items-center max-w-7xl mx-auto rounded-b-2xl">
+        {/* 🧭 TOP BAR / NAVBAR MINIMALIS */}
+        <nav className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 sm:px-8 py-4 flex justify-between items-center max-w-7xl mx-auto rounded-b-2xl">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 sm:p-2 bg-indigo-600 rounded-xl text-white font-black shadow-lg shadow-indigo-600/30 text-xs sm:text-sm">MS</div>
-            <h1 className="text-base sm:text-xl font-black tracking-wider text-white">MOTO<span className="text-indigo-500">SELL</span></h1>
+            <div className="p-2 bg-indigo-600 rounded-xl text-white font-black shadow-lg shadow-indigo-600/30">MS</div>
+            <h1 className="text-xl font-black tracking-wider text-white">MOTO<span className="text-indigo-500">SELL</span></h1>
           </div>
-          <div className="flex items-center gap-3 sm:gap-5 text-xs sm:text-sm font-bold text-slate-400">
+          <div className="flex items-center gap-4 text-xs sm:text-sm font-bold text-slate-400">
             <Link href="/motors" className="hover:text-white transition">Katalog</Link>
-            <a href="#tentang-kami" className="hidden sm:inline hover:text-white transition">Tentang Kami</a>
-            {/* 🤝 Tombol Akses Cepat Jual Motor pada Navbar */}
+            <a href="#tentang-kami" className="hover:text-white transition">Tentang Kami</a>
+            
+            {/* Tombol Ajukan Jual Motor di Sisi Publik (Navbar) */}
             <button 
-              onClick={handleSellToShowroomClick}
-              className="px-2.5 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl border border-indigo-500/30 text-[10px] sm:text-xs font-black transition uppercase tracking-wider"
+              onClick={handleSellMotorClick}
+              className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl border border-indigo-500/30 text-xs font-bold transition uppercase tracking-wider"
             >
               🤝 Jual Motor
             </button>
-            <Link href="/admin/dashboard" className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 text-slate-200 text-[10px] sm:text-xs font-semibold transition">Console</Link>
+
+            <a href="/admin/dashboard" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 text-slate-200 text-xs font-semibold transition">Console Admin</a>
           </div>
         </nav>
 
         {/* 🎬 DYNAMIC BANNER SLIDER SECTION */}
         <div className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 relative group">
           {banners.length === 0 ? (
-            <div className="w-full h-48 md:h-80 bg-slate-900 rounded-3xl border border-slate-800 flex items-center justify-center text-slate-500 font-medium text-xs sm:text-sm">
+            <div className="w-full h-48 md:h-80 bg-slate-900 rounded-3xl border border-slate-800 flex items-center justify-center text-slate-500 font-medium">
               Belum ada spanduk promo aktif yang di-publish.
             </div>
           ) : (
@@ -141,8 +143,8 @@ export default function PublicHomepage() {
                 alt={banners[currentBanner]?.title}
                 className="w-full h-full object-cover select-none transition-all duration-700 ease-in-out" 
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex items-end p-4 sm:p-6 md:p-10">
-                <h2 className="text-xs sm:text-lg md:text-3xl font-black tracking-tight text-white drop-shadow-md max-w-2xl bg-slate-950/70 p-3 sm:p-4 rounded-2xl backdrop-blur-sm border border-white/5">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-6 md:p-10">
+                <h2 className="text-lg sm:text-2xl md:text-4xl font-black tracking-tight text-white drop-shadow-md max-w-2xl bg-slate-950/60 p-3 sm:p-4 rounded-2xl backdrop-blur-sm border border-white/5">
                   {banners[currentBanner]?.title}
                 </h2>
               </div>
@@ -151,15 +153,15 @@ export default function PublicHomepage() {
                 <>
                   <button 
                     onClick={() => setCurrentBanner((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-slate-900/70 border border-white/10 rounded-full text-white opacity-0 group-hover:opacity-100 transition duration-200"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-slate-900/70 border border-white/10 rounded-full text-white opacity-0 group-hover:opacity-100 transition duration-200"
                   >
-                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button 
                     onClick={() => setCurrentBanner((prev) => (prev + 1) % banners.length)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-slate-900/70 border border-white/10 rounded-full text-white opacity-0 group-hover:opacity-100 transition duration-200"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-slate-900/70 border border-white/10 rounded-full text-white opacity-0 group-hover:opacity-100 transition duration-200"
                   >
-                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <ChevronRight className="w-5 h-5" />
                   </button>
                 </>
               )}
@@ -169,15 +171,13 @@ export default function PublicHomepage() {
 
         {/* 🔍 SEARCH AND BRAND FILTER CONTROLS */}
         <section id="katalog" className="max-w-7xl mx-auto mt-12 px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6">
-            <div className="flex items-start gap-2">
-              <span className="w-3 h-6 bg-indigo-500 rounded-full shrink-0 mt-0.5" />
-              <div>
-                <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
-                  Jelajahi Armada <span className="text-indigo-500">Ready Stock</span>
-                </h2>
-                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">Semua unit lulus inspeksi ketat dan surat-surat dijamin aman tembus.</p>
-              </div>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-800 pb-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                <span className="w-3 h-6 bg-indigo-500 rounded-full" />
+                Jelajahi Armada <span className="text-indigo-500">Ready Stock</span>
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">Semua unit lulus inspection ketat dan surat-surat dijamin aman tembus.</p>
             </div>
 
             <div className="relative w-full md:w-80">
@@ -187,15 +187,19 @@ export default function PublicHomepage() {
                 placeholder="Cari model motor (e.g. Vario, Aerox)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
             </div>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2 pt-4 scrollbar-none max-w-full">
+          <div className="flex gap-2 overflow-x-auto pb-2 pt-4 scrollbar-none">
             <button
               onClick={() => setSelectedBrand('ALL')}
-              className="px-3.5 py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition shrink-0 border bg-indigo-600 text-white border-indigo-500 shadow-md"
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition shrink-0 border ${
+                selectedBrand === 'ALL'
+                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+              }`}
             >
               Semua Merek
             </button>
@@ -203,7 +207,7 @@ export default function PublicHomepage() {
               <button
                 key={brand.id}
                 onClick={() => setSelectedBrand(brand.code)}
-                className={`px-3.5 py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition shrink-0 border ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition shrink-0 border ${
                   selectedBrand === brand.code
                     ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
                     : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
@@ -215,10 +219,10 @@ export default function PublicHomepage() {
           </div>
         </section>
 
-        {/* 🏍️ ETALASE GRID KATALOG PRODUK RESPONSIF */}
+        {/* 🏍️ ETALASE GRID KATALOG PRODUK */}
         <section className="max-w-7xl mx-auto mt-6 px-4 sm:px-6">
           {filteredMotors.length === 0 ? (
-            <div className="py-16 text-center bg-slate-900/50 border border-dashed border-slate-800 rounded-3xl text-slate-500 text-xs sm:text-sm font-medium">
+            <div className="py-16 text-center bg-slate-900/50 border border-dashed border-slate-800 rounded-3xl text-slate-500 font-medium">
               Tidak ada unit motor "{searchQuery}" yang ready stock saat ini.
             </div>
           ) : (
@@ -227,60 +231,60 @@ export default function PublicHomepage() {
                 const primaryPhoto = motor.motor_code === "HON-001" ? "/vercel.svg" : (motor.motor_images?.find(img => img.is_primary)?.image_url || motor.motor_images[0]?.image_url || '/placeholder.png');
 
                 return (
-                  <div key={motor.id} className="bg-slate-900 border border-slate-800 hover:border-indigo-500/40 rounded-2xl overflow-hidden group shadow-lg transition-all duration-300 flex flex-col justify-between">
+                  <div key={motor.id} className="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl overflow-hidden group shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 flex flex-col justify-between">
                     <div>
-                      <Link href={`/motors/${motor.slug}`} className="block w-full h-44 sm:h-48 bg-slate-950 relative overflow-hidden cursor-pointer">
+                      <Link href={`/motors/${motor.slug}`} className="block w-full h-48 bg-slate-950 relative overflow-hidden cursor-pointer">
                         <img 
                           src={primaryPhoto} 
                           alt={motor.model}
                           className="w-full h-full object-cover group-hover:scale-105 transition duration-300 select-none" 
                         />
-                        <span className="absolute top-3 left-3 bg-indigo-600/90 backdrop-blur-sm text-[9px] font-black tracking-widest px-2.5 py-1 rounded-md text-white border border-indigo-400/20 uppercase">
+                        <span className="absolute top-3 left-3 bg-indigo-600/90 backdrop-blur-sm text-[10px] font-black tracking-widest px-2.5 py-1 rounded-md text-white border border-indigo-400/20 uppercase">
                           {motor.brands?.code}
                         </span>
                       </Link>
 
-                      <div className="p-4 sm:p-5">
+                      <div className="p-5">
                         <div className="flex justify-between items-start gap-2">
                           <Link href={`/motors/${motor.slug}`} className="block truncate max-w-[75%]">
-                            <h3 className="font-black text-sm sm:text-base text-white tracking-tight group-hover:text-indigo-400 transition truncate cursor-pointer">
+                            <h3 className="font-black text-base text-white tracking-tight group-hover:text-indigo-400 transition truncate cursor-pointer">
                               {motor.model}
                             </h3>
                           </Link>
-                          <span className="text-[9px] sm:text-xs font-mono font-bold text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 shrink-0">{motor.motor_code}</span>
+                          <span className="text-xs font-mono font-bold text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 shrink-0">{motor.motor_code}</span>
                         </div>
                         
-                        <div className="text-lg sm:text-xl font-black text-indigo-400 mt-2">
+                        <div className="text-xl font-black text-indigo-400 mt-2">
                           Rp {motor.price.toLocaleString('id-ID')}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2.5 mt-4 border-t border-slate-800/60 pt-4 text-[11px] sm:text-xs font-medium text-slate-400">
-                          <div className="flex items-center gap-1.5 truncate">
-                            <Fuel className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <div className="grid grid-cols-2 gap-3 mt-4 border-t border-slate-800/60 pt-4 text-xs font-medium text-slate-400">
+                          <div className="flex items-center gap-2 truncate">
+                            <Fuel className="w-4 h-4 text-slate-500 shrink-0" />
                             <span className="truncate capitalize">{motor.transmission}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 truncate">
-                            <Gauge className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <div className="flex items-center gap-2 truncate">
+                            <Gauge className="w-4 h-4 text-slate-500 shrink-0" />
                             <span className="truncate">{motor.mileage.toLocaleString('id-ID')} Km</span>
                           </div>
-                          <div className="flex items-center gap-1.5 truncate">
-                            <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                            <span>Th {motor.year}</span>
+                          <div className="flex items-center gap-2 truncate">
+                            <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
+                            <span>Tahun {motor.year}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 truncate">
-                            <Award className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                            <span className="text-emerald-500 truncate font-bold">{motor.condition}</span>
+                          <div className="flex items-center gap-2 truncate">
+                            <Award className="w-4 h-4 text-slate-500 shrink-0" />
+                            <span className="text-emerald-500 truncate font-semibold">{motor.condition}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-4 sm:p-5 pt-0">
+                    <div className="p-5 pt-0">
                       <button
                         onClick={() => handleWhatsAppClick(motor)}
-                        className="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs tracking-wider uppercase flex items-center justify-center gap-2 transition shadow-md"
+                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs tracking-wider uppercase flex items-center justify-center gap-2 transition shadow-md"
                       >
-                        <MessageCircle className="w-4 h-4 fill-white" /> Cek Ready Unit
+                        <MessageCircle className="w-4 h-4 fill-white" /> Hubungi via WhatsApp
                       </button>
                     </div>
                   </div>
@@ -290,95 +294,95 @@ export default function PublicHomepage() {
           )}
         </section>
 
-        {/* 🤝 SECTION BARU: CALL TO ACTION UNTUK KONSUMEN YANG MAU JUAL MOTOR (SKENARIO 1) */}
+        {/* 🤝 SECTION CALL TO ACTION: UNTUK MASYARAKAT YANG MAU JUAL MOTOR KE MOTOSELL */}
         <section className="max-w-7xl mx-auto mt-20 px-4 sm:px-6">
-          <div className="bg-gradient-to-r from-indigo-950 to-slate-900 border border-indigo-500/20 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl shadow-indigo-950/20">
-            <div className="space-y-1">
-              {/* 🔥 FIX: Tag penutup span yang salah kemarin sudah resmi diperbaiki menjadi </span> */}
-              <span className="inline-block text-[9px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
+          <div className="bg-gradient-to-r from-indigo-950 to-slate-900 border border-indigo-500/20 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl">
+            <div className="space-y-2">
+              <span className="inline-block text-[10px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
                 Mitra Kulakan Showroom
               </span>
-              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight pt-1">
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                 Mau Jual Motor Bekas Anda <span className="text-indigo-400">Dengan Harga Tinggi?</span>
               </h3>
               <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
-                Kami siap menampung armada motor bekas Anda! Proses cepat, taksiran harga transparan adil, dan tim inspektor kami siap datang ke rumah Anda. Klik ajukan penawaran via WhatsApp sekarang.
+                Kami siap menampung armada motor bekas Anda! Proses cepat, taksiran harga transparan adil, dan tim inspektor kami siap datang ke lokasi. Klik ajukan penawaran via WhatsApp sekarang.
               </p>
             </div>
             <button
-              onClick={handleSellToShowroomClick}
-              className="w-full md:w-auto shrink-0 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-black rounded-xl transition shadow-lg shadow-indigo-950 uppercase tracking-wider text-center"
+              onClick={handleSellMotorClick}
+              className="w-full md:w-auto shrink-0 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-black rounded-xl transition shadow-lg uppercase tracking-wider text-center"
             >
               🤝 Ajukan Jual Motor
             </button>
           </div>
         </section>
 
-        {/* 🏆 SECTION KEUNGGULAN SHOWROOM */}
+        {/* 🏆 BANNER / SECTION KEUNGGULAN SHOWROOM */}
         <section id="keunggulan" className="max-w-7xl mx-auto mt-20 px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-950/10 p-5 sm:p-6 rounded-2xl border border-slate-800 flex items-start gap-4">
-            <div className="p-2.5 bg-indigo-600/10 rounded-xl border border-indigo-500/20 text-indigo-400 shrink-0"><ShieldCheck className="w-5 h-5" /></div>
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-950/20 p-6 rounded-2xl border border-slate-800 flex items-start gap-4">
+            <div className="p-3 bg-indigo-600/10 rounded-xl border border-indigo-500/20 text-indigo-400 shrink-0"><ShieldCheck className="w-6 h-6" /></div>
             <div>
-              <h4 className="font-bold text-xs sm:text-sm uppercase tracking-wider text-white">Garansi Mesin</h4>
-              <p className="text-[11px] sm:text-xs text-slate-400 mt-1 leading-relaxed">Semua unit di MotoSell dilindungi garansi mesin 3 bulan untuk menjamin kenyamanan berkendara Anda.</p>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-white">Garansi Mesin</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">Semua unit di MotoSell dilindungi garansi mesin 3 bulan untuk menjamin kenyamanan berkendara Anda.</p>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-950/10 p-5 sm:p-6 rounded-2xl border border-slate-800 flex items-start gap-4">
-            <div className="p-2.5 bg-indigo-600/10 rounded-xl border border-indigo-500/20 text-indigo-400 shrink-0"><Award className="w-5 h-5" /></div>
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-950/20 p-6 rounded-2xl border border-slate-800 flex items-start gap-4">
+            <div className="p-3 bg-indigo-600/10 rounded-xl border border-indigo-500/20 text-indigo-400 shrink-0"><Award className="w-6 h-6" /></div>
             <div>
-              <h4 className="font-bold text-xs sm:text-sm uppercase tracking-wider text-white">Lulus Inspeksi 100%</h4>
-              <p className="text-[11px] sm:text-xs text-slate-400 mt-1 leading-relaxed">Setiap motor telah melalui pengetesan kelistrikan, cek rangka, serta uji kompresi mesin secara detail.</p>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-white">Lulus Inspeksi 100%</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">Setiap motor telah melalui pengetesan kelistrikan, cek rangka, serta uji kompresi mesin secara detail.</p>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-950/10 p-5 sm:p-6 rounded-2xl border border-slate-800 flex items-start gap-4">
-            <div className="p-2.5 bg-indigo-600/10 rounded-xl border border-indigo-500/20 text-indigo-400 shrink-0"><MessageCircle className="w-5 h-5" /></div>
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-950/20 p-6 rounded-2xl border border-slate-800 flex items-start gap-4">
+            <div className="p-3 bg-indigo-600/10 rounded-xl border border-indigo-500/20 text-indigo-400 shrink-0"><MessageCircle className="w-6 h-6" /></div>
             <div>
-              <h4 className="font-bold text-xs sm:text-sm uppercase tracking-wider text-white">Nego Sampai Deal</h4>
-              <p className="text-[11px] sm:text-xs text-slate-400 mt-1 leading-relaxed">Hubungi admin kami lewat WhatsApp, atur jadwal ketemuan/COD, dan lakukan nego harga terbaik langsung di lokasi.</p>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-white">Nego Sampai Deal</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">Hubungi admin kami lewat WhatsApp, atur jadwal ketemuan/COD, dan lakukan nego harga terbaik langsung di lokasi.</p>
             </div>
           </div>
         </section>
 
-        {/* 🏢 SECTION INFORMASI PROFILE DETAIL MOTOSELL */}
+        {/* 🏢 SECTION INFORMASI PROFILE DETAIL MOTOSELL (DINAMIS DATABASE) */}
         <section id="tentang-kami" className="max-w-7xl mx-auto mt-20 mb-12 px-4 sm:px-6">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center shadow-xl">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center shadow-xl">
             <div>
-              <span className="text-[9px] bg-indigo-950 text-indigo-400 border border-indigo-800 font-bold uppercase tracking-widest px-2.5 py-1 rounded-md">PROFIL SHOWROOM</span>
-              <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-3">
+              <span className="text-[10px] bg-indigo-950 text-indigo-400 border border-indigo-800 font-bold uppercase tracking-widest px-3 py-1 rounded-md">PROFIL SHOWROOM</span>
+              <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-3">
                 MotoSell: Solusi Jual Beli Motor Bekas <span className="text-indigo-500">Bergaransi & Tepercaya</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-4 leading-relaxed font-medium">
+              <p className="text-xs sm:text-sm text-slate-400 mt-4 leading-relaxed font-medium">
                 MotoSell hadir sebagai showroom motor bekas modern yang mengutamakan kualitas armada dan kepuasan pelanggan. Kami memahami bahwa membeli kendaraan bekas seringkali memicu kekhawatiran, oleh karena itu setiap motor di MotoSell wajib melewati tahapan **12 Titik Inspeksi Fisik & Mesin** sebelum dipajang di etalase kami.
               </p>
-              <p className="text-xs text-slate-400 mt-3 leading-relaxed font-medium">
+              <p className="text-xs sm:text-sm text-slate-400 mt-3 leading-relaxed font-medium">
                 Dengan transparansi kondisi unit, jaminan surat-surat kendaraan asli tembus hukum, serta layanan purnajual berupa garansi mesin, kami berkomitmen memberikan pengalaman bertransaksi yang aman, nyaman, dan bebas rasa cemas bagi seluruh pelanggan kami.
               </p>
             </div>
             
+            {/* Grid Informasi Kontak Dinamis */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60 flex gap-3 items-start">
-                <MapPin className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                <MapPin className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                 <div>
                   <h5 className="text-xs font-bold text-white uppercase tracking-wider">Lokasi Showroom</h5>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">{storeConfig?.showroom_address || 'Loading alamat...'}</p>
                 </div>
               </div>
               <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60 flex gap-3 items-start">
-                <Clock className="w-4 h-4 text-indigo-500 shrink-0" />
+                <Clock className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                 <div>
                   <h5 className="text-xs font-bold text-white uppercase tracking-wider">Jam Operasional</h5>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">{storeConfig?.operational_hours || 'Loading jam kerja...'}</p>
                 </div>
               </div>
               <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60 flex gap-3 items-start">
-                <Phone className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                <Phone className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                 <div>
                   <h5 className="text-xs font-bold text-white uppercase tracking-wider">Kontak WhatsApp</h5>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">+{storeConfig?.whatsapp_number || 'Loading kontak...'}</p>
                 </div>
               </div>
               <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60 flex gap-3 items-start">
-                <Mail className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                <Mail className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                 <div>
                   <h5 className="text-xs font-bold text-white uppercase tracking-wider">Email Support</h5>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">{storeConfig?.support_email || 'Loading email...'}</p>
@@ -389,13 +393,13 @@ export default function PublicHomepage() {
         </section>
       </div>
 
-      {/* 🏁 PREMIUM GLOBAL BLACK FOOTER */}
+      {/* 🏁 PREMIUM GLOBAL BLACK FOOTER (DINAMIS DATABASE) */}
       <footer className="w-full bg-slate-950 border-t border-slate-900 pt-12 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-8 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 pb-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-indigo-600 rounded-xl text-white font-black text-xs sm:text-sm">MS</div>
-              <h4 className="text-base sm:text-lg font-black tracking-wider text-white">MOTO<span className="text-indigo-500">SELL</span></h4>
+              <div className="p-2 bg-indigo-600 rounded-xl text-white font-black">MS</div>
+              <h4 className="text-lg font-black tracking-wider text-white">MOTO<span className="text-indigo-500">SELL</span></h4>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
               Showroom motor bekas modern dan berkualitas premium terpercaya. Transparansi kondisi fisik dan mesin terjamin lewat sertifikasi lulus inspeksi ketat.
@@ -414,7 +418,7 @@ export default function PublicHomepage() {
             <h5 className="text-xs font-black uppercase tracking-widest text-slate-300 border-b border-slate-900 pb-2 max-w-[150px]">Ikuti Media Sosial</h5>
             <div className="flex items-center gap-3 text-slate-400">
               <a href={storeConfig?.instagram_url || 'https://instagram.com'} target="_blank" rel="noreferrer" className="p-2 bg-slate-900 hover:bg-indigo-600 rounded-xl hover:text-white transition shadow-md"><Camera className="w-4 h-4" /></a>
-              <button onClick={handleSellToShowroomClick} className="p-2 bg-slate-900 hover:bg-indigo-600 rounded-xl hover:text-white transition shadow-md"><Phone className="w-4 h-4" /></button>
+              <button onClick={handleSellMotorClick} className="p-2 bg-slate-900 hover:bg-indigo-600 rounded-xl hover:text-white transition shadow-md"><Phone className="w-4 h-4" /></button>
             </div>
             <div className="pt-2 text-[10px] text-slate-500 flex items-center gap-1.5 font-medium">
               <ShieldAlert className="w-3.5 h-3.5 text-indigo-600" />
