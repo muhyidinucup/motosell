@@ -131,7 +131,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900 rounded-3xl">
       
-      {/* HEADER ATAS RESPONSIVE - REVISI JUDUL TEGAK LURUS & RATA KIRI DI HP */}
+      {/* 🏁 HEADER ATAS RESPONSIVE - REVISI JUDUL TEGAK LURUS & RATA KIRI DI HP */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 sm:mb-8 gap-4 border-b-2 border-indigo-100 pb-6">
         <div className="flex items-start gap-2.5 max-w-full">
           <span className="w-3 h-7 bg-indigo-600 rounded-full shrink-0 mt-1 sm:mt-1.5" />
@@ -204,7 +204,7 @@ export default function AdminDashboardPage() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={formatLineChartData()} margin={{ top: 10, right: 10, left: 15, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={9} fontWeight="bold" title="Tanggal" />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={9} fontWeight="bold" />
                 <YAxis stroke="#64748b" fontSize={10} fontWeight="bold" width={55} />
                 <Tooltip formatter={(value) => [`Rp ${Number(value).toLocaleString('id-ID')}`, 'Omset Tanggal Ini']} />
                 <Line type="monotone" dataKey="Omset" stroke="#4f46e5" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} />
