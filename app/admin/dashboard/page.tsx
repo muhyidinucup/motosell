@@ -30,8 +30,11 @@ export default function AdminDashboardPage() {
       } catch (error) {
         console.error('Gagal memuat data grafik:', error)
       } finally {
-        setLoading(false)
+        nodeLoading(false)
       }
+    }
+    const nodeLoading = (status: boolean) => {
+      setLoading(status)
     }
     fetchDashboardData()
   }, [])
@@ -110,57 +113,67 @@ export default function AdminDashboardPage() {
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500 font-bold animate-pulse">Menghitung data finansial showroom...</div>
+    return <div className="p-8 text-center text-slate-500 font-bold animate-pulse text-xs sm:text-sm uppercase tracking-wider">Menghitung data finansial showroom...</div>
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900 rounded-3xl">
       
-      {/* HEADER ATAS RESPONSIVE (Tumpuk Vertikal di HP, Sejajar di Desktop) */}
+      {/* 🏁 HEADER ATAS RESPONSIVE - REVISI JUDUL TEGAK LURUS & RATA KIRI DI HP */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 sm:mb-8 gap-4 border-b-2 border-indigo-100 pb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <LayoutDashboard className="w-7 sm:w-8 h-7 sm:h-8 text-indigo-600" />
-            Executive <span className="text-indigo-600">Financial Dashboard</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Analisis grafik performa omset penjualan dan unduh laporan pembukuan.</p>
+        <div className="flex items-start gap-2.5 max-w-full">
+          {/* Aksen Garis Neon Premium */}
+          <span className="w-3 h-7 bg-indigo-600 rounded-full shrink-0 mt-1 sm:mt-1.5" />
+          
+          <div className="space-y-1 min-w-0 flex-1">
+            {/* Wadah Flex Independen untuk Ikon & Teks Judul */}
+            <div className="flex items-center gap-2 text-slate-900">
+              <LayoutDashboard className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600 shrink-0" />
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-none">
+                Executive <span className="text-indigo-600">Financial Dashboard</span>
+              </h1>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed">
+              Analisis grafik performa omset penjualan dan unduh laporan pembukuan.
+            </p>
+          </div>
         </div>
         <button
           onClick={exportToExcel}
           className="w-full md:w-auto text-center justify-center px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs sm:text-sm transition shadow-md flex items-center gap-2 uppercase tracking-wider"
         >
-          <Download className="w-4 h-4" /> Export Jurnal Excel
+          <Download className="w-4 h-4 shrink-0" /> Export Jurnal Excel
         </button>
       </div>
 
-      {/* 📊 KARTU STATISTIK (grid-cols-1 di HP, otomatis membelah jadi 3 di Desktop) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      {/* 📊 KARTU STATISTIK (Dinamis Adaptif di Tablet & Layar Smartphone) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 sm:p-6 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Total Omset Pendapatan</p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Total Omset Pendapatan</p>
             <h3 className="text-xl sm:text-2xl lg:text-3xl font-black mt-2">Rp {totalOmset.toLocaleString('id-ID')}</h3>
           </div>
-          <div className="p-3 bg-indigo-600/20 rounded-xl text-indigo-400">
-            <DollarSign className="w-6 h-6" />
+          <div className="p-3 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400 shrink-0">
+            <DollarSign className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 sm:p-6 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Total Unit Terjual</p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Total Unit Terjual</p>
             <h3 className="text-xl sm:text-2xl lg:text-3xl font-black mt-2">{totalTerjual} Armada</h3>
           </div>
-          <div className="p-3 bg-indigo-600/20 rounded-xl text-indigo-400">
+          <div className="p-3 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400 shrink-0">
             <ShoppingBag className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 sm:p-6 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between">
+        <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 sm:p-6 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between sm:col-span-2 lg:col-span-1">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Akumulasi Selisih Nego</p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Akumulasi Selisih Nego</p>
             <h3 className="text-xl sm:text-2xl lg:text-3xl font-black mt-2">Rp {totalDiskonNego.toLocaleString('id-ID')}</h3>
           </div>
-          <div className="p-3 bg-indigo-600/20 rounded-xl text-indigo-400">
+          <div className="p-3 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400 shrink-0">
             <TrendingUp className="w-6 h-6" />
           </div>
         </div>
@@ -169,7 +182,7 @@ export default function AdminDashboardPage() {
       {/* BLOCK GRAFIK UTAMA */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         
-        {/* LINE CHART: TREN PENDAPATAN */}
+        {/* LINE CHART: TREN PENDAPATAN (FIX ANTI TERPOTONG BEZEL DI HP) */}
         <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-slate-200 min-w-0">
           <h2 className="text-xs sm:text-sm font-black mb-6 text-slate-700 tracking-wider uppercase flex items-center gap-2">
             <span className="w-2.5 h-4 sm:h-5 rounded-full bg-indigo-600" />
@@ -177,10 +190,10 @@ export default function AdminDashboardPage() {
           </h2>
           <div className="w-full h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={formatLineChartData()}>
+              <LineChart data={formatLineChartData()} margin={{ top: 10, right: 10, left: 15, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={10} fontWeight="bold" />
-                <YAxis stroke="#64748b" fontSize={10} fontWeight="bold" width={40} />
+                <YAxis stroke="#64748b" fontSize={10} fontWeight="bold" width={55} />
                 <Tooltip formatter={(value) => [`Rp ${Number(value).toLocaleString('id-ID')}`, 'Omset']} />
                 <Line type="monotone" dataKey="Omset" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
               </LineChart>
@@ -226,7 +239,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* BAR CHART: PENJUALAN MINGGUAN */}
+        {/* BAR CHART: PENJUALAN MINGGUAN (FIX MARGIN SUMBU) */}
         <div className="lg:col-span-3 bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-slate-200 min-w-0">
           <h2 className="text-xs sm:text-sm font-black mb-6 text-slate-700 tracking-wider uppercase flex items-center gap-2">
             <span className="w-2.5 h-4 sm:h-5 rounded-full bg-indigo-600" />
@@ -234,9 +247,9 @@ export default function AdminDashboardPage() {
           </h2>
           <div className="w-full h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={formatBarChartData()}>
+              <BarChart data={formatBarChartData()} margin={{ top: 10, right: 10, left: 5, bottom: 5 }}>
                 <XAxis dataKey="name" stroke="#64748b" fontSize={10} fontWeight="bold" />
-                <YAxis stroke="#64748b" fontSize={10} fontWeight="bold" allowDecimals={false} width={25} />
+                <YAxis stroke="#64748b" fontSize={10} fontWeight="bold" allowDecimals={false} width={30} />
                 <Tooltip formatter={(value) => [`${value} Unit`, 'Terjual']} />
                 <Bar dataKey="Unit" fill="#10b981" radius={[6, 6, 0, 0]} barSize={30} />
               </BarChart>
