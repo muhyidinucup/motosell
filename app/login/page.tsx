@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
             MS
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            CONSOLE <span className="text-indigo-500">MOTOSELL</span>
+            PANEL ADMIN <span className="text-indigo-500">MOTOSELL</span>
           </h1>
           <p className="text-xs text-slate-400 font-medium">
             Silakan masukkan kredensial khusus untuk mengelola operasional showroom.

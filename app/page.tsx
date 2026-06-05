@@ -131,7 +131,8 @@ export default function PublicHomepage() {
               🤝 Jual Motor
             </button>
 
-            <a href="/admin/dashboard" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 text-slate-200 text-xs font-semibold transition">Console Admin</a>
+            {/* 🌟 REVISI: Mengubah teks Console Admin menjadi Panel Admin */}
+            <a href="/admin/dashboard" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 text-slate-200 text-xs font-semibold transition">Panel Admin</a>
           </div>
 
           {/* 📱 TOMBOL HAMBURGER DI HP */}
@@ -171,12 +172,13 @@ export default function PublicHomepage() {
                 🤝 Jual Motor Anda
               </button>
 
+              {/* 🌟 REVISI: Mengubah teks Console Admin Panel menjadi Panel Admin */}
               <Link 
                 href="/admin/dashboard" 
                 onClick={() => setIsMenuOpen(false)}
                 className="text-sm font-bold text-slate-200 hover:text-white bg-white/5 hover:bg-white/10 p-3 rounded-xl border border-white/10 text-center transition"
               >
-                ⚙️ Console Admin Panel
+                ⚙️ Panel Admin
               </Link>
             </div>
           </div>
@@ -224,7 +226,6 @@ export default function PublicHomepage() {
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
                 <span className="w-3 h-6 bg-indigo-500 rounded-full" />
-                {/* 🌟 REVISI: Kata armada diubah menjadi Motor */}
                 Motor <span className="text-indigo-500">Ready Stock</span>
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">Semua unit lulus inspeksi ketat dan surat-surat dijamin aman tembus.</p>
@@ -352,11 +353,9 @@ export default function PublicHomepage() {
                 Mitra Kulakan Showroom
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                {/* 🌟 REVISI: Kata armada diubah menjadi Motor */}
                 Mau Jual Motor Bekas Anda <span className="text-indigo-400">Dengan Harga Tinggi?</span>
               </h3>
               <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
-                {/* 🌟 REVISI: Kata armada diubah menjadi motor */}
                 Kami siap menampung motor bekas Anda! Proses cepat, taksiran harga transparan adil, dan tim inspektor kami siap datang ke lokasi. Klik ajukan penawaran via WhatsApp sekarang.
               </p>
             </div>
@@ -403,11 +402,10 @@ export default function PublicHomepage() {
                 MotoSell: Solusi Jual Beli Motor Bekas <span className="text-indigo-500">Bergaransi & Tepercaya</span>
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 mt-4 leading-relaxed font-medium">
-                {/* 🌟 REVISI: Kata armada diubah menjadi motor */}
                 MotoSell hadir sebagai showroom motor bekas modern yang mengutamakan kualitas motor dan kepuasan pelanggan. Kami memahami bahwa membeli kendaraan bekas seringkali memicu kekhawatiran, oleh karena itu setiap motor di MotoSell wajib melewati tahapan **12 Titik Inspeksi Fisik & Mesin** sebelum dipajang di etalase kami.
               </p>
               <p className="text-xs sm:text-sm text-slate-400 mt-3 leading-relaxed font-medium">
-                Dengan transparansi condition unit, jaminan surat-surat kendaraan asli tembus hukum, serta layanan purnajual berupa garansi mesin, kami berkomitmen memberikan pengalaman bertransaksi yang aman, nyaman, dan bebas rasa cemas bagi seluruh pelanggan kami.
+                With transparansi condition unit, jaminan surat-surat kendaraan asli tembus hukum, serta layanan purnajual berupa garansi mesin, kami berkomitmen memberikan pengalaman bertransaksi yang aman, nyaman, dan bebas rasa cemas bagi seluruh pelanggan kami.
               </p>
             </div>
             
@@ -464,7 +462,8 @@ export default function PublicHomepage() {
               <Link href="/motors" className="hover:text-indigo-400 transition">Katalog Semua Motor</Link>
               <a href="#tentang-kami" className="hover:text-indigo-400 transition">Tentang Showroom</a>
               <a href="#keunggulan" className="hover:text-indigo-400 transition">Pilar Keunggulan</a>
-              <Link href="/admin/dashboard" className="hover:text-indigo-400 transition">Sistem Console Admin</Link>
+              {/* 🌟 REVISI: Mengubah tautan footer menjadi Panel Admin */}
+              <Link href="/admin/dashboard" className="hover:text-indigo-400 transition">Sistem Panel Admin</Link>
             </div>
           </div>
           <div className="space-y-3">
