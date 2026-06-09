@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { getBrands } from '@/actions/brand'
 import { getMotors, createMotor, updateMotor, deleteMotor, uploadMotorImages, getMotorImages, deleteMotorImage } from '@/actions/motor'
 import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload } from 'lucide-react'
+// @ts-ignore
+import imageCompression from 'browser-image-compression' // 🔥 AMUNISI SAKTI PENGUNYAH GAMBAR MONSTER
 
 interface Brand {
   id: number
@@ -78,29 +80,48 @@ export default function AdminMotorsPage() {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 🔥 ROBOT JINAKKAN FOTO MONSTER 13MB BERBASIS BACKGROUND WORKER CLIENT 🔥
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
     
     const filesArray = Array.from(e.target.files)
     setPreviews([])
     setSelectedFiles([])
+    setErrorMessage('')
 
-    filesArray.forEach((file) => {
-      if (!file.type.startsWith('image/')) return
+    const options = {
+      maxSizeMB: 0.3,          // Paksa file hasil akhir wajib di bawah 300KB! (Sangat aman dari limit Vercel)
+      maxWidthOrHeight: 1200,   // Resolusi HD maksimal lebar/tinggi 1200px
+      useWebWorker: true,
+      fileType: 'image/webp'    // Konversi biner paksa ke format .webp milik Google agar hemat storage
+    }
 
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = (reader.result as string).split(',')[1]
-        
-        setPreviews((prev) => [...prev, reader.result as string])
-        setSelectedFiles((prev) => [...prev, {
-          name: file.name,
-          type: file.type,
-          base64: base64String
-        }])
+    for (const file of filesArray) {
+      if (!file.type.startsWith('image/')) continue
+
+      try {
+        // Pemerasan gambar berjalan otomatis
+        const compressedFile = await imageCompression(file, options)
+        const previewUrl = URL.createObjectURL(compressedFile)
+
+        const reader = new FileReader()
+        reader.readAsDataURL(compressedFile)
+        reader.onloadend = () => {
+          const base64String = (reader.result as string).split(',')[1]
+          const safeName = file.name.replace(/\.[^/.]+$/, '') + '.webp'
+
+          setPreviews((prev) => [...prev, previewUrl])
+          setSelectedFiles((prev) => [...prev, {
+            name: safeName,
+            type: 'image/webp',
+            base64: base64String
+          }])
+        }
+      } catch (err) {
+        console.error(err)
+        setErrorMessage('Gagal memperkecil ukuran foto raksasa lu, Chief. Coba ulangi upload.')
       }
-      reader.readAsDataURL(file)
-    })
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -241,10 +262,9 @@ export default function AdminMotorsPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900 rounded-3xl">
-      {/* 🏍️ Header Utama Responsif dengan Racing Indigo Bar */}
+      {/* Header Utama Responsif */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-indigo-100 pb-6">
         <div className="flex items-start gap-2.5 max-w-full">
-          {/* Aksen Garis Menyala Khas Racing */}
           <span className="w-3 h-7 bg-indigo-600 rounded-full shrink-0 mt-1 sm:mt-1.5" />
           <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2 text-slate-900">
@@ -262,13 +282,13 @@ export default function AdminMotorsPage() {
 
       {/* Notifikasi Eror */}
       {errorMessage && (
-        <div className="p-4 mb-6 text-sm text-red-800 bg-red-50 border-l-4 border-red-500 rounded-r-xl font-medium animate-pulse">
+        <div className="p-4 mb-6 text-sm text-red-800 bg-red-50 border-l-4 border-red-500 rounded-r-xl font-medium">
           <span className="font-bold">Eror:</span> {errorMessage}
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form Box - Lebih Compact & Ramah Jempol Mobile */}
+        {/* Form Box */}
         <div className={`p-5 sm:p-6 rounded-2xl shadow-xl border transition-all duration-300 text-white h-fit ${
           editingId 
             ? 'bg-amber-900 border-amber-700 shadow-amber-950/20' 
@@ -383,7 +403,6 @@ export default function AdminMotorsPage() {
               </div>
             </div>
 
-            {/* FOTO DATABASE - PRATINJAU LEBIH RAPI DI HP */}
             {editingId && savedImages.length > 0 && (
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-amber-200 mb-1.5">Foto Terunggah di Database</label>
@@ -414,7 +433,8 @@ export default function AdminMotorsPage() {
               <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>
                 {editingId ? 'Tambah File Foto Baru' : 'Upload Foto Unit (Min. 1 Foto)'}
               </label>
-              <div className="relative w-full min-h-[90px] border-2 border-dashed border-white/20 hover:border-indigo-400 rounded-xl transition flex flex-col items-center justify-center p-3 cursor-pointer bg-white/5">
+              {/* 🔥 FIX: Lint Warning Tailwind Modern min-h-[90px] -> min-h-22.5 */}
+              <div className="relative w-full min-h-22.5 border-2 border-dashed border-white/20 hover:border-indigo-400 rounded-xl transition flex flex-col items-center justify-center p-3 cursor-pointer bg-white/5">
                 <input
                   type="file"
                   multiple
@@ -518,9 +538,10 @@ export default function AdminMotorsPage() {
           </form>
         </div>
 
-        {/* Tabel Inventori - High Performance Padding Adaptif Mobile */}
+        {/* Tabel Inventori */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
+          {/* 🔥 FIX: Lint Warning Tailwind Modern bg-gradient-to-r -> bg-linear-to-r */}
+          <div className="p-5 bg-linear-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
             <div>
               <h2 className="text-base sm:text-lg font-bold tracking-wide">Inventori Motor Toko</h2>
               <p className="text-xs text-indigo-200/70 font-medium mt-0.5">Total unit terdata: {motors.length} unit</p>
