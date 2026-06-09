@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  allowedDevOrigins: ['172.16.0.2', 'localhost:3000'] // 👈 SEKARANG DI SINI, DI TINGKAT UTAMA!
+  
+  // 🔥 DI NEXT.JS 16, SHARP WAJIB DITARUH DI SINI (TINGKAT UTAMA CHIEF, BUKAN EXPERIMENTAL!)
+  serverExternalPackages: ['sharp']
 };
 
 export default nextConfig;
