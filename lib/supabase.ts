@@ -22,9 +22,14 @@ export async function createClientServer() {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
+            cookiesToSet.forEach(({ name, value, options }) => {
+              // 🛡️ AMANKAN SESI: Jika ini kuki login (access-token), batasi umurnya maksimal 2 jam saja (7200 detik)
+              const secureOptions = { ...options }
+              if (name.includes('auth-token') || name.includes('session')) {
+                secureOptions.maxAge = 7200 // 2 Jam otomatis log out
+              }
+              cookieStore.set(name, value, secureOptions)
+            })
           } catch {
             // Abaikan error jika dipanggil dari Server Component biasa
           }

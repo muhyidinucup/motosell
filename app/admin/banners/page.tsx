@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { getBanners, createBanner, deleteBanner } from '@/actions/banner'
 import { Trash2, Plus, Image as ImageIcon, Upload, Link as LinkIcon } from 'lucide-react'
+// @ts-ignore
+import imageCompression from 'browser-image-compression' // 🔥 AMUNISI UTAMA PENGUNYAH BANNER RAKSASA LU
 
 interface Banner {
   id: number
@@ -37,23 +39,48 @@ export default function AdminBannersPage() {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 🔥 ROBOT PERAS GAMBAR SPANDUK BERJALAN OTOMATIS DI CLIENT-SIDE
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return
     const file = e.target.files[0]
 
     if (!file.type.startsWith('image/')) return
 
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64String = (reader.result as string).split(',')[1]
-      setPreview(reader.result as string)
-      setSelectedFile({
-        name: file.name,
-        type: file.type,
-        base64: base64String
-      })
+    setIsLoading(true) // Nyalakan efek loading pas lagi meras gambar raksasa
+    setErrorMessage('')
+
+    // Setelan rahasia: Paksa banner Full HD wajib di bawah 400KB berformat .webp milik Google!
+    const options = {
+      maxSizeMB: 0.4,          // Batas aman di bawah 400KB agar loading website enteng & hemat storage
+      maxWidthOrHeight: 1920,   // Resolusi lebar landscape layar monitor desktop
+      useWebWorker: true,
+      fileType: 'image/webp'    // Konversi biner murni ke ekstensi hemat kuota .webp
     }
-    reader.readAsDataURL(file)
+
+    try {
+      const compressedFile = await imageCompression(file, options)
+      const previewUrl = URL.createObjectURL(compressedFile)
+
+      const reader = new FileReader()
+      reader.readAsDataURL(compressedFile)
+      reader.onloadend = () => {
+        const base64String = (reader.result as string).split(',')[1]
+        // Ganti nama ekstensi file asli di sistem jadi .webp secara otomatis
+        const safeName = file.name.replace(/\.[^/.]+$/, '') + '.webp'
+
+        setPreview(previewUrl)
+        setSelectedFile({
+          name: safeName,
+          type: 'image/webp',
+          base64: base64String
+        })
+      }
+    } catch (err) {
+      console.error(err)
+      setErrorMessage('Gagal memperkecil resolusi banner raksasa lu, Chief. Coba file lain.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -79,6 +106,7 @@ export default function AdminBannersPage() {
     } catch (error: any) {
       setErrorMessage(error.message)
     } finally {
+      // Tombol loading dimatikan setelah proses kodingan selesai
       setIsLoading(false)
     }
   }
@@ -99,10 +127,9 @@ export default function AdminBannersPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900 rounded-3xl">
-      {/* 🏁 Header Utama Responsif dengan Racing Indigo Bar (Murni Manajemen Banner) */}
+      {/* 🏁 Header Utama Responsif */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-indigo-100 pb-6">
         <div className="flex items-start gap-2.5">
-          {/* Aksen Garis Neon Premium */}
           <span className="w-3 h-7 bg-indigo-600 rounded-full shrink-0 mt-1 sm:mt-1.5" />
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
@@ -110,7 +137,7 @@ export default function AdminBannersPage() {
               Manajemen <span className="text-indigo-600">Banner</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed">
-              Kelola gambar slide promosi diskon di halaman depan MotoSell.
+              Kelola gambar slide promosi diskon di halaman depan MotoSell (Auto-Compress Active).
             </p>
           </div>
         </div>
@@ -183,14 +210,14 @@ export default function AdminBannersPage() {
               disabled={isLoading}
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" /> {isLoading ? 'Mengunggah...' : 'Publish Banner'}
+              <Plus className="w-4 h-4" /> {isLoading ? 'Mengompres & Upload...' : 'Publish Banner'}
             </button>
           </form>
         </div>
 
         {/* Tabel List Banner Promosi */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
+          <div className="p-5 bg-linear-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
             <div>
               <h2 className="text-base sm:text-lg font-bold tracking-wide">Daftar Banner Berjalan</h2>
               <p className="text-xs text-indigo-200/70 font-medium mt-0.5">Total terpasang: {banners.length} spanduk aktif</p>
@@ -205,12 +232,10 @@ export default function AdminBannersPage() {
             ) : (
               banners.map((banner) => (
                 <div key={banner.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
-                  {/* Visual Gambar Banner */}
                   <div className="relative aspect-[21/9] bg-slate-900 border-b border-slate-100">
                     <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
                   </div>
                   
-                  {/* Info Teks & Button Aksi */}
                   <div className="p-4 flex justify-between items-center gap-4 bg-white">
                     <div className="min-w-0 flex-1">
                       <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">{banner.title}</h3>

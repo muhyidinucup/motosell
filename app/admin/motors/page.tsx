@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { getBrands } from '@/actions/brand'
 import { getMotors, createMotor, updateMotor, deleteMotor, uploadMotorImages, getMotorImages, deleteMotorImage } from '@/actions/motor'
-import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload } from 'lucide-react'
+import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload, Download, Search, Landmark, ShieldCheck, Filter } from 'lucide-react'
 // @ts-ignore
-import imageCompression from 'browser-image-compression' // 🔥 AMUNISI SAKTI PENGUNYAH GAMBAR MONSTER
+import imageCompression from 'browser-image-compression'
+import * as XLSX from 'xlsx'
 
 interface Brand {
   id: number
@@ -19,6 +20,7 @@ interface Motor {
   brand_id: number
   model: string
   year: number
+  purchase_price: number
   price: number
   mileage: number
   transmission: string
@@ -43,9 +45,14 @@ export default function AdminMotorsPage() {
   const [motors, setMotors] = useState<Motor[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'ready' | 'booking' | 'sold'>('all')
+  const [filteredMotors, setFilteredMotors] = useState<Motor[]>([])
+
   const [brandId, setBrandId] = useState('')
   const [model, setModel] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
+  const [purchasePrice, setPurchasePrice] = useState('')
   const [price, setPrice] = useState('')
   const [mileage, setMileage] = useState('')
   const [transmission, setTransmission] = useState('Automatic')
@@ -62,10 +69,30 @@ export default function AdminMotorsPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('') // FITUR BARU: State untuk notifikasi sukses
 
   useEffect(() => {
     loadInitialData()
   }, [])
+
+  useEffect(() => {
+    let temp = [...motors]
+
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase()
+      temp = temp.filter(m => 
+        m.model.toLowerCase().includes(query) || 
+        m.motor_code.toLowerCase().includes(query) ||
+        (m.brands?.name && m.brands.name.toLowerCase().includes(query))
+      )
+    }
+
+    if (statusFilter !== 'all') {
+      temp = temp.filter(m => m.status === statusFilter)
+    }
+
+    setFilteredMotors(temp)
+  }, [searchQuery, statusFilter, motors])
 
   async function loadInitialData() {
     try {
@@ -80,47 +107,64 @@ export default function AdminMotorsPage() {
     }
   }
 
-  // 🔥 ROBOT JINAKKAN FOTO MONSTER 13MB BERBASIS BACKGROUND WORKER CLIENT 🔥
+  const totalUnitAktif = motors.filter(m => m.status !== 'sold').length
+  const totalValuasiAset = motors
+    .filter(m => m.status === 'ready' || m.status === 'booking')
+    .reduce((sum, m) => sum + Number(m.purchase_price || 0), 0)
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
     
     const filesArray = Array.from(e.target.files)
-    setPreviews([])
-    setSelectedFiles([])
     setErrorMessage('')
+    setSuccessMessage('')
+    setIsLoading(true)
 
     const options = {
-      maxSizeMB: 0.3,          // Paksa file hasil akhir wajib di bawah 300KB! (Sangat aman dari limit Vercel)
-      maxWidthOrHeight: 1200,   // Resolusi HD maksimal lebar/tinggi 1200px
+      maxSizeMB: 0.3,          
+      maxWidthOrHeight: 1200,   
       useWebWorker: true,
-      fileType: 'image/webp'    // Konversi biner paksa ke format .webp milik Google agar hemat storage
+      fileType: 'image/webp'    
     }
 
-    for (const file of filesArray) {
-      if (!file.type.startsWith('image/')) continue
+    const newPreviews: string[] = []
+    const newSelectedFiles: { name: string; type: string; base64: string }[] = []
 
-      try {
-        // Pemerasan gambar berjalan otomatis
+    try {
+      for (const file of filesArray) {
+        if (!file.type.startsWith('image/')) continue
+
         const compressedFile = await imageCompression(file, options)
         const previewUrl = URL.createObjectURL(compressedFile)
 
-        const reader = new FileReader()
-        reader.readAsDataURL(compressedFile)
-        reader.onloadend = () => {
-          const base64String = (reader.result as string).split(',')[1]
-          const safeName = file.name.replace(/\.[^/.]+$/, '') + '.webp'
+        const base64String = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.readAsDataURL(compressedFile)
+          reader.onloadend = () => {
+            const res = (reader.result as string).split(',')[1]
+            resolve(res)
+          }
+          reader.onerror = (err) => reject(err)
+        })
 
-          setPreviews((prev) => [...prev, previewUrl])
-          setSelectedFiles((prev) => [...prev, {
-            name: safeName,
-            type: 'image/webp',
-            base64: base64String
-          }])
-        }
-      } catch (err) {
-        console.error(err)
-        setErrorMessage('Gagal memperkecil ukuran foto raksasa lu, Chief. Coba ulangi upload.')
+        const safeName = file.name.replace(/\.[^/.]+$/, '') + '.webp'
+
+        newPreviews.push(previewUrl)
+        newSelectedFiles.push({
+          name: safeName,
+          type: 'image/webp',
+          base64: base64String
+        })
       }
+
+      setPreviews((prev) => [...prev, ...newPreviews])
+      setSelectedFiles((prev) => [...prev, ...newSelectedFiles])
+
+    } catch (err) {
+      console.error(err)
+      setErrorMessage('Gagal memproses multiple foto motor, coba kurangi jumlah file.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -138,6 +182,7 @@ export default function AdminMotorsPage() {
 
     setIsLoading(true)
     setErrorMessage('')
+    setSuccessMessage('') // FITUR BARU: Reset notifikasi sukses saat mulai submit
 
     try {
       const payload = {
@@ -145,6 +190,7 @@ export default function AdminMotorsPage() {
         model,
         year: Number(year),
         price: Number(price),
+        purchase_price: Number(purchasePrice),
         mileage: Number(mileage),
         transmission,
         color,
@@ -158,17 +204,20 @@ export default function AdminMotorsPage() {
         if (selectedFiles.length > 0) {
           await uploadMotorImages(editingId, selectedFiles)
         }
+        setSuccessMessage('Berhasil! Perubahan data unit motor telah disimpan.') // FITUR BARU: Pesan sukses edit
         setEditingId(null)
       } else {
         const newMotor = await createMotor(payload)
         if (newMotor && newMotor.id) {
           await uploadMotorImages(newMotor.id, selectedFiles)
         }
+        setSuccessMessage('Berhasil! Unit motor baru telah ditambahkan ke inventori.') // FITUR BARU: Pesan sukses tambah
       }
 
       setBrandId('')
       setModel('')
       setPrice('')
+      setPurchasePrice('')
       setMileage('')
       setColor('')
       setDescription('')
@@ -183,6 +232,7 @@ export default function AdminMotorsPage() {
     } catch (error: any) {
       setErrorMessage(error.message)
     } finally {
+      setEditingId(null)
       setIsLoading(false)
     }
   }
@@ -192,6 +242,7 @@ export default function AdminMotorsPage() {
     setBrandId(String(motor.brand_id))
     setModel(motor.model)
     setYear(motor.year)
+    setPurchasePrice(String(motor.purchase_price || ''))
     setPrice(String(motor.price))
     setMileage(String(motor.mileage))
     setTransmission(motor.transmission)
@@ -203,6 +254,7 @@ export default function AdminMotorsPage() {
     
     setSelectedFiles([])
     setPreviews([])
+    setSuccessMessage('') // FITUR BARU: Hilangkan pesan sukses lama saat buka form edit
 
     await fetchSavedImages(motor.id)
   }
@@ -233,6 +285,7 @@ export default function AdminMotorsPage() {
     setEditingId(null)
     setBrandId('')
     setModel('')
+    setPurchasePrice('')
     setPrice('')
     setMileage('')
     setColor('')
@@ -243,16 +296,20 @@ export default function AdminMotorsPage() {
     setPreviews([])
     setSavedImages([])
     setErrorMessage('')
+    setSuccessMessage('')
   }
 
   async function handleDelete(id: number, code: string) {
     if (!confirm(`Apakah Anda yakin ingin menghapus motor dengan kode "${code}"?`)) return
 
     setIsLoading(true)
+    setErrorMessage('')
+    setSuccessMessage('')
     try {
       await deleteMotor(id)
       const updatedMotors = await getMotors()
       setMotors(updatedMotors as unknown as Motor[])
+      setSuccessMessage(`Berhasil menghapus unit motor ${code} dari inventori.`) // FITUR BARU: Pesan sukses hapus
     } catch (error: any) {
       setErrorMessage(error.message)
     } finally {
@@ -260,9 +317,36 @@ export default function AdminMotorsPage() {
     }
   }
 
+  const exportInventoryToExcel = () => {
+    if (filteredMotors.length === 0) return alert('Tidak ada data unit motor terfilter untuk diekspor, Chief!')
+
+    const excelRows = filteredMotors.map((motor, index) => ({
+      'No': index + 1,
+      'Kode Motor (ID)': motor.motor_code,
+      'Pabrikan / Brand': motor.brands?.name || '-',
+      'Model Tipe': motor.model,
+      'Tahun Rakit': motor.year,
+      'Harga Modal (Rp)': motor.purchase_price || 0,
+      'Harga Jual (Rp)': motor.price,
+      'Jarak Tempuh (Km)': motor.mileage,
+      'Transmisi': motor.transmission,
+      'Warna': motor.color,
+      'Kondisi Fisik': motor.condition,
+      'Rekomendasi Utama': motor.featured ? 'YA (Homepage)' : 'TIDAK',
+      'Status Ketersediaan': motor.status.toUpperCase(),
+      'Deskripsi / Minus': motor.description || '-'
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(excelRows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Inventori Motor')
+    
+    const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+    XLSX.writeFile(workbook, `Data_Stok_Inventori_MotoSell_${todayStr}.xlsx`)
+  }
+
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans bg-slate-50 min-h-screen text-slate-900 rounded-3xl">
-      {/* Header Utama Responsif */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-indigo-100 pb-6">
         <div className="flex items-start gap-2.5 max-w-full">
           <span className="w-3 h-7 bg-indigo-600 rounded-full shrink-0 mt-1 sm:mt-1.5" />
@@ -280,15 +364,48 @@ export default function AdminMotorsPage() {
         </div>
       </div>
 
-      {/* Notifikasi Eror */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Total Stok Unit Aktif</p>
+            <h3 className="text-xl sm:text-2xl font-black mt-1">{totalUnitAktif} Unit Armada</h3>
+            <p className="text-[9px] text-indigo-200/50 font-semibold mt-1 uppercase tracking-wider">| Diluar status sold</p>
+          </div>
+          <div className="p-3 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400 shrink-0">
+            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Valuasi Modal Aset Toko</p>
+            <h3 className="text-xl sm:text-2xl font-black mt-1">Rp {totalValuasiAset.toLocaleString('id-ID')}</h3>
+            <p className="text-[9px] text-indigo-200/50 font-semibold mt-1 uppercase tracking-wider">| Perputaran dana unit ready & booking</p>
+          </div>
+          <div className="p-3 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400 shrink-0">
+            <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+        </div>
+      </div>
+
+      {/* TAMPILAN ERROR LAMA (Merah) */}
       {errorMessage && (
         <div className="p-4 mb-6 text-sm text-red-800 bg-red-50 border-l-4 border-red-500 rounded-r-xl font-medium">
           <span className="font-bold">Eror:</span> {errorMessage}
         </div>
       )}
 
+      {/* TAMPILAN NOTIFIKASI SUKSES BARU (Hijau) */}
+      {successMessage && (
+        <div className="p-4 mb-6 text-sm text-emerald-800 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl font-medium flex justify-between items-center shadow-sm">
+          <div><span className="font-bold">Sukses:</span> {successMessage}</div>
+          <button onClick={() => setSuccessMessage('')} className="p-1 hover:bg-emerald-200 rounded-lg transition-colors text-emerald-700">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form Box */}
         <div className={`p-5 sm:p-6 rounded-2xl shadow-xl border transition-all duration-300 text-white h-fit ${
           editingId 
             ? 'bg-amber-900 border-amber-700 shadow-amber-950/20' 
@@ -319,7 +436,7 @@ export default function AdminMotorsPage() {
               <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Model / Tipe Motor</label>
               <input
                 type="text"
-                placeholder="Contioh: Vario 150 CBS"
+                placeholder="Contoh: Vario 150 CBS"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 required
@@ -353,7 +470,18 @@ export default function AdminMotorsPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Harga (Rp)</label>
+                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-emerald-400'}`}>Harga Modal (Rp)</label>
+                <input
+                  type="number"
+                  placeholder="Contoh: 15000000"
+                  value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  required
+                  className="w-full px-4 py-2.5 bg-emerald-900/20 border border-emerald-500/30 rounded-xl text-emerald-100 text-sm placeholder-emerald-100/30 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-indigo-300'}`}>Harga Jual (Rp)</label>
                 <input
                   type="number"
                   placeholder="Contoh: 17500000"
@@ -363,6 +491,9 @@ export default function AdminMotorsPage() {
                   className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Jarak (Km)</label>
                 <input
@@ -374,9 +505,6 @@ export default function AdminMotorsPage() {
                   className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Transmisi</label>
                 <select
@@ -389,7 +517,10 @@ export default function AdminMotorsPage() {
                   <option value="Kopling" className="text-slate-900">Kopling</option>
                 </select>
               </div>
-              <div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
                 <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>Kondisi</label>
                 <select
                   value={condition}
@@ -433,7 +564,6 @@ export default function AdminMotorsPage() {
               <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>
                 {editingId ? 'Tambah File Foto Baru' : 'Upload Foto Unit (Min. 1 Foto)'}
               </label>
-              {/* 🔥 FIX: Lint Warning Tailwind Modern min-h-[90px] -> min-h-22.5 */}
               <div className="relative w-full min-h-22.5 border-2 border-dashed border-white/20 hover:border-indigo-400 rounded-xl transition flex flex-col items-center justify-center p-3 cursor-pointer bg-white/5">
                 <input
                   type="file"
@@ -538,13 +668,48 @@ export default function AdminMotorsPage() {
           </form>
         </div>
 
-        {/* Tabel Inventori */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          {/* 🔥 FIX: Lint Warning Tailwind Modern bg-gradient-to-r -> bg-linear-to-r */}
-          <div className="p-5 bg-linear-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
+          <div className="p-5 bg-linear-to-r from-slate-900 to-indigo-950 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-base sm:text-lg font-bold tracking-wide">Inventori Motor Toko</h2>
-              <p className="text-xs text-indigo-200/70 font-medium mt-0.5">Total unit terdata: {motors.length} unit</p>
+              <p className="text-xs text-indigo-200/70 font-medium mt-0.5">Menampilkan: {filteredMotors.length} dari {motors.length} total unit</p>
+            </div>
+            
+            <button
+              onClick={exportInventoryToExcel}
+              type="button"
+              className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-emerald-950/20 flex items-center justify-center gap-2 uppercase tracking-wider cursor-pointer"
+            >
+              <Download className="w-4 h-4 shrink-0" /> Unduh Stok Excel
+            </button>
+          </div>
+
+          <div className="p-4 bg-slate-100/50 border-b border-slate-200 flex flex-col md:flex-row gap-3 items-center w-full">
+            <div className="relative w-full md:flex-1">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <Search className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                placeholder="Cari model, tipe, atau kode motor..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700 placeholder-slate-400 shadow-sm"
+              />
+            </div>
+
+            <div className="relative w-full md:w-64 shrink-0 flex items-center gap-1.5 bg-white px-3 py-2 border border-slate-200 rounded-xl shadow-sm">
+              <Filter className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-700 focus:outline-none cursor-pointer"
+              >
+                <option value="all">Filter: Semua Status</option>
+                <option value="ready">Filter: Ready (Tersedia)</option>
+                <option value="booking">Filter: Booking (Dipesan)</option>
+                <option value="sold">Filter: Sold (Terjual)</option>
+              </select>
             </div>
           </div>
 
@@ -555,20 +720,21 @@ export default function AdminMotorsPage() {
                   <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Kode Unit</th>
                   <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Motor / Model</th>
                   <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Spesifikasi</th>
+                  <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Harga Modal</th>
                   <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Harga Pasang</th>
                   <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Status</th>
                   <th className="py-4 px-2 sm:px-4 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Operasi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {motors.length === 0 ? (
+                {filteredMotors.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400 text-sm font-medium">
-                      Belum ada armada motor terdata di inventori MotoSell.
+                    <td colSpan={7} className="py-12 text-center text-slate-400 text-sm font-medium">
+                      Tidak ada unit motor yang cocok dengan pencarian atau filter dropdown status pilihan Anda.
                     </td>
                   </tr>
                 ) : (
-                  motors.map((motor) => (
+                  filteredMotors.map((motor) => (
                     <tr key={motor.id} className="hover:bg-indigo-50/30 transition-colors">
                       <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-bold font-mono text-indigo-600">{motor.motor_code}</td>
                       <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm">
@@ -579,6 +745,9 @@ export default function AdminMotorsPage() {
                         <div className="flex items-center gap-1"><Calendar className="w-3 h-3 text-slate-400 shrink-0" /> Th {motor.year}</div>
                         <div className="flex items-center gap-1"><Gauge className="w-3 h-3 text-slate-400 shrink-0" /> {motor.mileage.toLocaleString('id-ID')} Km</div>
                         <div className="flex items-center gap-1"><Sliders className="w-3 h-3 text-slate-400 shrink-0" /> {motor.transmission}</div>
+                      </td>
+                      <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-bold text-slate-500 whitespace-nowrap">
+                        Rp {(motor.purchase_price || 0).toLocaleString('id-ID')}
                       </td>
                       <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-extrabold text-slate-900 whitespace-nowrap">
                         Rp {motor.price.toLocaleString('id-ID')}

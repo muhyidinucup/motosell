@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getMotorDetailBySlug } from '@/actions/public'
-import { ChevronLeft, MessageCircle, Fuel, Gauge, Calendar, Award, ShieldCheck, Camera, Phone, ShieldAlert } from 'lucide-react'
+import { ChevronLeft, MessageCircle, Fuel, Gauge, Calendar, Award, ShieldCheck, Camera, Phone, ShieldAlert, Share2, Check } from 'lucide-react'
 
 interface MotorDetail {
   id: number
@@ -26,6 +26,7 @@ export default function PublicMotorDetailPage() {
   const [motor, setMotor] = useState<MotorDetail | null>(null)
   const [activeImage, setActiveImage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false) // State penanda tautan berhasil disalin
 
   useEffect(() => {
     async function loadDetail() {
@@ -53,6 +54,20 @@ export default function PublicMotorDetailPage() {
     window.open(`https://wa.me/${nomorWA}?text=${encodeURIComponent(teksPesan)}`, '_blank')
   }
 
+  // 🔥 FITUR BARU: Handler Salin URL Clipboard ala E-Commerce Premium
+  const handleShareClick = () => {
+    if (typeof window === 'undefined') return
+    
+    const currentUrl = window.location.href
+    navigator.clipboard.writeText(currentUrl)
+      .then(() => {
+        setCopied(true)
+        // Reset ikon kembali ke semula setelah 2 detik
+        setTimeout(() => setCopied(false), 2000)
+      })
+      .catch((err) => console.error('Gagal menyalin tautan:', err))
+  }
+
   if (loading) {
     return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center font-bold animate-pulse">MEMBUKA GALERI SPESIFIKASI UNIT...</div>
   }
@@ -74,7 +89,7 @@ export default function PublicMotorDetailPage() {
         <div className="max-w-6xl mx-auto px-4 pt-6">
           <button 
             onClick={() => router.push('/')}
-            className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-800"
+            className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-800 cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" /> Kembali ke Katalog
           </button>
@@ -94,7 +109,7 @@ export default function PublicMotorDetailPage() {
                 <button
                   key={idx}
                   onClick={() => setActiveImage(img.image_url)}
-                  className={`h-16 sm:h-20 bg-slate-900 rounded-xl overflow-hidden border transition-all ${
+                  className={`h-16 sm:h-20 bg-slate-900 rounded-xl overflow-hidden border transition-all cursor-pointer ${
                     activeImage === img.image_url ? 'border-indigo-500 ring-2 ring-indigo-500/30 scale-95' : 'border-slate-800 hover:border-slate-600'
                   }`}
                 >
@@ -107,11 +122,37 @@ export default function PublicMotorDetailPage() {
           {/* KOLOM KANAN: SPEK */}
           <div className="flex flex-col justify-between bg-slate-900/40 p-6 sm:p-8 rounded-3xl border border-slate-900 shadow-xl">
             <div>
-              <div className="flex items-center gap-2 text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">
-                <span>READY STOCK</span>
-                <span>•</span>
-                <span>KODE UNIT: {motor.motor_code}</span>
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex items-center gap-2 text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">
+                  <span>READY STOCK</span>
+                  <span>•</span>
+                  <span>KODE UNIT: {motor.motor_code}</span>
+                </div>
+
+                {/* 🔥 ACTION BUTTON SHARE SPREADSHEET TAUTAN (ALUR BARU) */}
+                <button
+                  type="button"
+                  onClick={handleShareClick}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold tracking-wide uppercase transition-all duration-200 cursor-pointer ${
+                    copied 
+                      ? 'bg-emerald-950/80 border-emerald-500 text-emerald-400 shadow-xs' 
+                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 animate-scaleIn" />
+                      <span>Tautan Tersalin!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Bagikan Unit</span>
+                    </>
+                  )}
+                </button>
               </div>
+
               <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight mt-2">{motor.model}</h1>
               <div className="text-2xl sm:text-3xl font-black text-emerald-500 mt-3">
                 Rp {motor.price.toLocaleString('id-ID')}
@@ -163,7 +204,7 @@ export default function PublicMotorDetailPage() {
               </div>
               <button
                 onClick={handleWhatsAppClick}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-sm tracking-wider uppercase flex items-center justify-center gap-2.5 transition shadow-lg"
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-sm tracking-wider uppercase flex items-center justify-center gap-2.5 transition shadow-lg cursor-pointer"
               >
                 <MessageCircle className="w-5 h-5 fill-white" /> Ajukan Penawaran via WhatsApp
               </button>

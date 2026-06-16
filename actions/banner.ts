@@ -26,11 +26,11 @@ export async function createBanner(title: string, linkUrl: string, file: { name:
   const buffer = Buffer.from(file.base64, 'base64')
   const fileExt = file.name.split('.').pop()
   const fileName = `banner_${Date.now()}.${fileExt}`
-  const filePath = `promos/${fileName}`
+  const filePath = `banner/${fileName}` // <-- Diubah masuk ke kamar folder 'banner' (sesuai setup dashboard)
 
-  // A. Upload file gambar spanduk ke bucket "banners"
+  // A. Upload file gambar spanduk ke bucket master 'motosell'
   const { error: uploadError } = await supabase.storage
-    .from('banners')
+    .from('motosell') // <-- Menembak ke bucket master 'motosell'
     .upload(filePath, buffer, {
       contentType: file.type,
       upsert: true
@@ -40,9 +40,9 @@ export async function createBanner(title: string, linkUrl: string, file: { name:
     throw new Error(`Gagal upload gambar banner ke storage: ${uploadError.message}`)
   }
 
-  // B. Ambil URL Publik gambar spanduknya
+  // B. Ambil URL Publik gambar spanduknya dari bucket master 'motosell'
   const { data: publicUrlData } = supabase.storage
-    .from('banners')
+    .from('motosell')
     .getPublicUrl(filePath)
 
   // C. Masukkan data teks ke tabel database "banners"
@@ -69,15 +69,16 @@ export async function createBanner(title: string, linkUrl: string, file: { name:
 export async function deleteBanner(id: number, imageUrl: string) {
   const supabase = await createClientServer()
 
-  // A. Ekstrak path file gambar dari URL Publik Supabase
-  const urlParts = imageUrl.split('/storage/v1/object/public/banners/')
+  // A. Ekstrak path file gambar dari URL Publik Supabase berdasarkan bucket master 'motosell'
+  const urlParts = imageUrl.split('/storage/v1/object/public/motosell/')
   if (urlParts.length > 1) {
-    const filePath = urlParts[1]
-    // Hapus file fisiknya di storage bucket
-    await supabase.storage.from('banners').remove([filePath])
+    const filePath = urlParts[1] // berisi 'banner/nama_file.ext'
+    
+    // Hapus file fisiknya di storage bucket master menggunakan API resmi .remove() sesuai aturan dokumen
+    await supabase.storage.from('motosell').remove([filePath])
   }
 
-  // B. Hapus baris datanya di tabel database
+  // B. Hapus baris datanya di tabel database "banners"
   const { error } = await supabase
     .from('banners')
     .delete()
