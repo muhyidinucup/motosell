@@ -112,6 +112,47 @@ export default function AdminMotorsPage() {
     .filter(m => m.status === 'ready' || m.status === 'booking')
     .reduce((sum, m) => sum + Number(m.purchase_price || 0), 0)
 
+  // 🛠️ UTAL-ATIK AMAN: SUNTIKAN NATIVE CANVAS COMPRESSOR LAPIS KEDUA (FALLBACK SAKTI ANTI-CRASH)
+  const compressImageViaCanvas = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = (event) => {
+        const img = new Image()
+        img.src = event.target?.result as string
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          let width = img.width
+          let height = img.height
+
+          // Batasi resolusi maksimal lebar/tinggi di 1200px agar payload ringan stabil
+          const MAX_WIDTH_OR_HEIGHT = 1200
+          if (width > MAX_WIDTH_OR_HEIGHT || height > MAX_WIDTH_OR_HEIGHT) {
+            if (width > height) {
+              height = Math.round((height * MAX_WIDTH_OR_HEIGHT) / width)
+              width = MAX_WIDTH_OR_HEIGHT
+            } else {
+              width = Math.round((width * MAX_WIDTH_OR_HEIGHT) / height)
+              height = MAX_WIDTH_OR_HEIGHT
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          if (!ctx) return reject(new Error('Gagal memuat Canvas Context 2D'))
+          
+          ctx.drawImage(img, 0, 0, width, height)
+          // Ekspor paksa menjadi berkas ringkas berkualitas optimal (0.75)
+          const base64Result = canvas.toDataURL('image/jpeg', 0.75)
+          resolve(base64Result.split(',')[1])
+        }
+        img.onerror = (err) => reject(err)
+      }
+      reader.onerror = (err) => reject(err)
+    })
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
     
@@ -134,18 +175,43 @@ export default function AdminMotorsPage() {
       for (const file of filesArray) {
         if (!file.type.startsWith('image/')) continue
 
-        const compressedFile = await imageCompression(file, options)
-        const previewUrl = URL.createObjectURL(compressedFile)
+        let base64String = ''
+        let previewUrl = ''
 
-        const base64String = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.readAsDataURL(compressedFile)
-          reader.onloadend = () => {
-            const res = (reader.result as string).split(',')[1]
-            resolve(res)
+        try {
+          // Lapis 1: Coba gunakan browser-image-compression bawaan asli Anda
+          const compressedFile = await imageCompression(file, options)
+          previewUrl = URL.createObjectURL(compressedFile)
+
+          base64String = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.readAsDataURL(compressedFile)
+            reader.onloadend = () => {
+              const res = (reader.result as string).split(',')[1]
+              resolve(res)
+            }
+            reader.onerror = (err) => reject(err)
+          })
+
+          // Pagar Pengaman Ukuran (Safety Gate): Jika library meloloskan file bengkak di atas 2MB biner Base64
+          if (base64String.length * 0.75 > 2 * 1024 * 1024) {
+            throw new Error('Trigger Fallback Canvas') // Lempar paksa ke penanganan lapis kedua
           }
-          reader.onerror = (err) => reject(err)
-        })
+        } catch (compressionErr) {
+          // Lapis 2 (Penyelamat): Eksekusi Native Canvas Compressor jika file 4MB lolos sensor library
+          console.log(`Mengaktifkan Canvas Native Fallback untuk mengamankan berkas: ${file.name}`)
+          base64String = await compressImageViaCanvas(file)
+          
+          // Buat blob preview baru dari string biner murni agar penampung galeri tetap menyala indah
+          const byteCharacters = atob(base64String)
+          const byteNumbers = new Array(byteCharacters.length)
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i)
+          }
+          const byteArray = new Uint8Array(byteNumbers)
+          const blobFallback = new Blob([byteArray], { type: 'image/jpeg' })
+          previewUrl = URL.createObjectURL(blobFallback)
+        }
 
         const safeName = file.name.replace(/\.[^/.]+$/, '') + '.webp'
 
@@ -367,7 +433,7 @@ export default function AdminMotorsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between">
           <div>
-            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Total Stok Unit Aktif</p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Total Stok Unit Hack Aktif</p>
             <h3 className="text-xl sm:text-2xl font-black mt-1">{totalUnitAktif} Unit Armada</h3>
             <p className="text-[9px] text-indigo-200/50 font-semibold mt-1 uppercase tracking-wider">| Diluar status sold</p>
           </div>
@@ -388,14 +454,12 @@ export default function AdminMotorsPage() {
         </div>
       </div>
 
-      {/* TAMPILAN ERROR LAMA (Merah) */}
       {errorMessage && (
         <div className="p-4 mb-6 text-sm text-red-800 bg-red-50 border-l-4 border-red-500 rounded-r-xl font-medium">
           <span className="font-bold">Eror:</span> {errorMessage}
         </div>
       )}
 
-      {/* TAMPILAN NOTIFIKASI SUKSES BARU (Hijau) */}
       {successMessage && (
         <div className="p-4 mb-6 text-sm text-emerald-800 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl font-medium flex justify-between items-center shadow-sm">
           <div><span className="font-bold">Sukses:</span> {successMessage}</div>
@@ -766,14 +830,14 @@ export default function AdminMotorsPage() {
                           <button
                             onClick={() => handleEditClick(motor)}
                             title="Edit Spesifikasi/Status"
-                            className="p-1.5 sm:p-2 bg-slate-100 hover:bg-amber-500 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60"
+                            className="p-1.5 sm:p-2 bg-slate-100 hover:bg-amber-500 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60 cursor-pointer"
                           >
                             <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(motor.id, motor.motor_code)}
                             title="Hapus Unit"
-                            className="p-1.5 sm:p-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60"
+                            className="p-1.5 sm:p-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-xl transition border border-slate-200/60 cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
