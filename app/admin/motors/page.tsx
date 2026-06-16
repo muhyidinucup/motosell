@@ -32,7 +32,7 @@ interface Motor {
   brands: {
     name: string
     code: string
-  }
+  } | null // 🛠️ PENYELAMAT UTAMA: Diubah dari Array [] menjadi Objek Tunggal agar sesuai Supabase & Hilangkan Eror Server Component Render Vercel!
 }
 
 interface SavedImage {
@@ -69,7 +69,7 @@ export default function AdminMotorsPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('') // FITUR BARU: State untuk notifikasi sukses
+  const [successMessage, setSuccessMessage] = useState('') 
 
   useEffect(() => {
     loadInitialData()
@@ -112,7 +112,7 @@ export default function AdminMotorsPage() {
     .filter(m => m.status === 'ready' || m.status === 'booking')
     .reduce((sum, m) => sum + Number(m.purchase_price || 0), 0)
 
-  // 🛠️ UTAL-ATIK AMAN: SUNTIKAN NATIVE CANVAS COMPRESSOR LAPIS KEDUA (FALLBACK SAKTI ANTI-CRASH)
+  // 🛠️ TAMENG AMAN: CANVAS COMPRESSOR LAPIS KEDUA (FALLBACK SAKTI JIKA LIBRARY BYPASS FILE 4MB)
   const compressImageViaCanvas = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -125,7 +125,6 @@ export default function AdminMotorsPage() {
           let width = img.width
           let height = img.height
 
-          // Batasi resolusi maksimal lebar/tinggi di 1200px agar payload ringan stabil
           const MAX_WIDTH_OR_HEIGHT = 1200
           if (width > MAX_WIDTH_OR_HEIGHT || height > MAX_WIDTH_OR_HEIGHT) {
             if (width > height) {
@@ -143,7 +142,6 @@ export default function AdminMotorsPage() {
           if (!ctx) return reject(new Error('Gagal memuat Canvas Context 2D'))
           
           ctx.drawImage(img, 0, 0, width, height)
-          // Ekspor paksa menjadi berkas ringkas berkualitas optimal (0.75)
           const base64Result = canvas.toDataURL('image/jpeg', 0.75)
           resolve(base64Result.split(',')[1])
         }
@@ -179,7 +177,7 @@ export default function AdminMotorsPage() {
         let previewUrl = ''
 
         try {
-          // Lapis 1: Coba gunakan browser-image-compression bawaan asli Anda
+          // Lapis 1: Coba jalankan library browser-image-compression bawaan asli
           const compressedFile = await imageCompression(file, options)
           previewUrl = URL.createObjectURL(compressedFile)
 
@@ -193,16 +191,14 @@ export default function AdminMotorsPage() {
             reader.onerror = (err) => reject(err)
           })
 
-          // Pagar Pengaman Ukuran (Safety Gate): Jika library meloloskan file bengkak di atas 2MB biner Base64
+          // Pengunci Keamanan: Jika library gagal dan meloloskan file bengkak di atas 2MB biner
           if (base64String.length * 0.75 > 2 * 1024 * 1024) {
-            throw new Error('Trigger Fallback Canvas') // Lempar paksa ke penanganan lapis kedua
+            throw new Error('Trigger Fallback Canvas')
           }
         } catch (compressionErr) {
-          // Lapis 2 (Penyelamat): Eksekusi Native Canvas Compressor jika file 4MB lolos sensor library
-          console.log(`Mengaktifkan Canvas Native Fallback untuk mengamankan berkas: ${file.name}`)
+          // Lapis 2: Eksekusi Canvas Compressor Native rahasia kita untuk melibas file 4MB
           base64String = await compressImageViaCanvas(file)
           
-          // Buat blob preview baru dari string biner murni agar penampung galeri tetap menyala indah
           const byteCharacters = atob(base64String)
           const byteNumbers = new Array(byteCharacters.length)
           for (let i = 0; i < byteCharacters.length; i++) {
@@ -248,7 +244,7 @@ export default function AdminMotorsPage() {
 
     setIsLoading(true)
     setErrorMessage('')
-    setSuccessMessage('') // FITUR BARU: Reset notifikasi sukses saat mulai submit
+    setSuccessMessage('') 
 
     try {
       const payload = {
@@ -270,14 +266,14 @@ export default function AdminMotorsPage() {
         if (selectedFiles.length > 0) {
           await uploadMotorImages(editingId, selectedFiles)
         }
-        setSuccessMessage('Berhasil! Perubahan data unit motor telah disimpan.') // FITUR BARU: Pesan sukses edit
+        setSuccessMessage('Berhasil! Perubahan data unit motor telah disimpan.') 
         setEditingId(null)
       } else {
         const newMotor = await createMotor(payload)
         if (newMotor && newMotor.id) {
           await uploadMotorImages(newMotor.id, selectedFiles)
         }
-        setSuccessMessage('Berhasil! Unit motor baru telah ditambahkan ke inventori.') // FITUR BARU: Pesan sukses tambah
+        setSuccessMessage('Berhasil! Unit motor baru telah ditambahkan ke inventori.') 
       }
 
       setBrandId('')
@@ -320,7 +316,7 @@ export default function AdminMotorsPage() {
     
     setSelectedFiles([])
     setPreviews([])
-    setSuccessMessage('') // FITUR BARU: Hilangkan pesan sukses lama saat buka form edit
+    setSuccessMessage('') 
 
     await fetchSavedImages(motor.id)
   }
@@ -375,7 +371,7 @@ export default function AdminMotorsPage() {
       await deleteMotor(id)
       const updatedMotors = await getMotors()
       setMotors(updatedMotors as unknown as Motor[])
-      setSuccessMessage(`Berhasil menghapus unit motor ${code} dari inventori.`) // FITUR BARU: Pesan sukses hapus
+      setSuccessMessage(`Berhasil menghapus unit motor ${code} dari inventori.`) 
     } catch (error: any) {
       setErrorMessage(error.message)
     } finally {
@@ -433,7 +429,7 @@ export default function AdminMotorsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between">
           <div>
-            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Total Stok Unit Hack Aktif</p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-indigo-300">Total Stok Unit Aktif</p>
             <h3 className="text-xl sm:text-2xl font-black mt-1">{totalUnitAktif} Unit Armada</h3>
             <p className="text-[9px] text-indigo-200/50 font-semibold mt-1 uppercase tracking-wider">| Diluar status sold</p>
           </div>
@@ -706,7 +702,7 @@ export default function AdminMotorsPage() {
                   editingId 
                     ? 'bg-amber-400 hover:bg-amber-300 text-amber-950' 
                     : 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                } disabled:opacity-50`}
+                } disabled:opacity-50 cursor-pointer`}
               >
                 {isLoading ? 'Memproses...' : editingId ? (
                   <>
@@ -723,7 +719,7 @@ export default function AdminMotorsPage() {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="w-full bg-white/10 text-white hover:bg-white/20 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 border border-white/10"
+                  className="w-full bg-white/10 text-white hover:bg-white/20 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 border border-white/10 cursor-pointer"
                 >
                   <X className="w-4 h-4" /> Batalkan Perubahan
                 </button>
@@ -803,7 +799,8 @@ export default function AdminMotorsPage() {
                       <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-bold font-mono text-indigo-600">{motor.motor_code}</td>
                       <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm">
                         <div className="font-bold text-slate-900 tracking-tight">{motor.model}</div>
-                        <div className="text-[10px] sm:text-xs text-slate-400 font-medium">{motor.brands?.name}</div>
+                        {/* 🛡️ RENDER DATA OBJEK SECARA AMAN */}
+                        <div className="text-[10px] sm:text-xs text-slate-400 font-medium">{motor.brands?.name || ''}</div>
                       </td>
                       <td className="py-3 px-2 sm:px-4 text-[10px] sm:text-xs space-y-0.5 text-slate-500 font-semibold">
                         <div className="flex items-center gap-1"><Calendar className="w-3 h-3 text-slate-400 shrink-0" /> Th {motor.year}</div>
