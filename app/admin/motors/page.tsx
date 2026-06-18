@@ -7,6 +7,7 @@ import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload, Downlo
 // @ts-ignore
 import imageCompression from 'browser-image-compression'
 import * as XLSX from 'xlsx'
+import { upload } from '@vercel/blob/client' // 🛠️ SUNTIKAN UTAMA: Menggunakan fungsi Direct Upload dari Vercel Blob
 
 interface Brand {
   id: number
@@ -62,7 +63,8 @@ export default function AdminMotorsPage() {
   const [status, setStatus] = useState<'ready' | 'booking' | 'sold'>('ready')
   const [featured, setFeatured] = useState(false)
 
-  const [selectedFiles, setSelectedFiles] = useState<{ name: string; type: string; base64: string }[]>([])
+  // 🛠️ DIUBAH AMAN: State selectedFiles sekarang menampung berkas biner mentah asli (File[]) untuk diunggah langsung ke Vercel Blob
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [savedImages, setSavedImages] = useState<SavedImage[]>([])
 
@@ -151,6 +153,7 @@ export default function AdminMotorsPage() {
     })
   }
 
+  // 🛠️ DIUBAH AMAN: Alur fungsi disesuaikan mengumpulkan data biner asli File untuk Vercel Blob
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
     
@@ -167,37 +170,30 @@ export default function AdminMotorsPage() {
     }
 
     const newPreviews: string[] = []
-    const newSelectedFiles: { name: string; type: string; base64: string }[] = []
+    const newSelectedFiles: File[] = []
 
     try {
       for (const file of filesArray) {
         if (!file.type.startsWith('image/')) continue
 
-        let base64String = ''
+        let finalCompressedFile: File | null = null
         let previewUrl = ''
 
         try {
           // Lapis 1: Coba jalankan library browser-image-compression bawaan asli
           const compressedFile = await imageCompression(file, options)
           previewUrl = URL.createObjectURL(compressedFile)
-
-          base64String = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
-            reader.readAsDataURL(compressedFile)
-            reader.onloadend = () => {
-              const res = (reader.result as string).split(',')[1]
-              resolve(res)
-            }
-            reader.onerror = (err) => reject(err)
-          })
+          
+          const safeName = file.name.replace(/\.[^/.]+$/, '') + '.webp'
+          finalCompressedFile = new File([compressedFile], safeName, { type: 'image/webp' })
 
           // Pengunci Keamanan: Jika library gagal dan meloloskan file bengkak di atas 2MB biner
-          if (base64String.length * 0.75 > 2 * 1024 * 1024) {
+          if (finalCompressedFile.size > 2 * 1024 * 1024) {
             throw new Error('Trigger Fallback Canvas')
           }
         } catch (compressionErr) {
           // Lapis 2: Eksekusi Canvas Compressor Native rahasia kita untuk melibas file 4MB
-          base64String = await compressImageViaCanvas(file)
+          const base64String = await compressImageViaCanvas(file)
           
           const byteCharacters = atob(base64String)
           const byteNumbers = new Array(byteCharacters.length)
@@ -207,16 +203,15 @@ export default function AdminMotorsPage() {
           const byteArray = new Uint8Array(byteNumbers)
           const blobFallback = new Blob([byteArray], { type: 'image/jpeg' })
           previewUrl = URL.createObjectURL(blobFallback)
+
+          const safeName = file.name.replace(/\.[^/.]+$/, '') + '.jpg'
+          finalCompressedFile = new File([blobFallback], safeName, { type: 'image/jpeg' })
         }
 
-        const safeName = file.name.replace(/\.[^/.]+$/, '') + '.webp'
-
-        newPreviews.push(previewUrl)
-        newSelectedFiles.push({
-          name: safeName,
-          type: 'image/webp',
-          base64: base64String
-        })
+        if (finalCompressedFile) {
+          newPreviews.push(previewUrl)
+          newSelectedFiles.push(finalCompressedFile)
+        }
       }
 
       setPreviews((prev) => [...prev, ...newPreviews])
@@ -247,6 +242,23 @@ export default function AdminMotorsPage() {
     setSuccessMessage('') 
 
     try {
+      // 🛠️ DIUBAH AMAN: Unggah biner langsung via browser ke server Vercel Blob menggunakan client upload
+      const uploadedImagePayloads: { name: string; type: string; base64: string }[] = []
+      
+      for (const file of selectedFiles) {
+        const blobResult = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/avatar/upload', 
+        })
+        
+        // Kirimkan tanda khusus VERCEL_BLOB_URL agar backend peka memisahkan link data
+        uploadedImagePayloads.push({
+          name: file.name,
+          type: file.type,
+          base64: `VERCEL_BLOB_URL:${blobResult.url}` 
+        })
+      }
+
       const payload = {
         brand_id: Number(brandId),
         model,
@@ -263,15 +275,15 @@ export default function AdminMotorsPage() {
 
       if (editingId) {
         await updateMotor(editingId, { ...payload, status })
-        if (selectedFiles.length > 0) {
-          await uploadMotorImages(editingId, selectedFiles)
+        if (uploadedImagePayloads.length > 0) {
+          await uploadMotorImages(editingId, uploadedImagePayloads)
         }
         setSuccessMessage('Berhasil! Perubahan data unit motor telah disimpan.') 
         setEditingId(null)
       } else {
         const newMotor = await createMotor(payload)
         if (newMotor && newMotor.id) {
-          await uploadMotorImages(newMotor.id, selectedFiles)
+          await uploadMotorImages(newMotor.id, uploadedImagePayloads)
         }
         setSuccessMessage('Berhasil! Unit motor baru telah ditambahkan ke inventori.') 
       }
@@ -790,7 +802,7 @@ export default function AdminMotorsPage() {
                 {filteredMotors.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-400 text-sm font-medium">
-                      Tidak ada unit motor yang cocok dengan pencarian atau filter dropdown status pilihan Anda.
+                      Tidak ada unit motor yang cocok dengan pencarian or filter dropdown status pilihan Anda.
                     </td>
                   </tr>
                 ) : (
@@ -799,7 +811,6 @@ export default function AdminMotorsPage() {
                       <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-bold font-mono text-indigo-600">{motor.motor_code}</td>
                       <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm">
                         <div className="font-bold text-slate-900 tracking-tight">{motor.model}</div>
-                        {/* 🛡️ RENDER DATA OBJEK SECARA AMAN */}
                         <div className="text-[10px] sm:text-xs text-slate-400 font-medium">{motor.brands?.name || ''}</div>
                       </td>
                       <td className="py-3 px-2 sm:px-4 text-[10px] sm:text-xs space-y-0.5 text-slate-500 font-semibold">

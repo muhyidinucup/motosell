@@ -3,6 +3,7 @@
 
 
 import { createClientServer } from '@/lib/supabase'
+import { del } from '@vercel/blob' // 🛠️ SUNTIKAN UTAMA: Menggunakan fungsi del untuk menghapus file fisik di Vercel Blob jika unit dihapus
 
 
 
@@ -44,7 +45,25 @@ export async function getMotors() {
 
 
 
-  return data
+  // 🛠️ SUNTIKAN KHUSUS: Paksa string numeric Supabase menjadi format Angka murni JavaScript
+
+  const normalizedData = data?.map((motor: any) => ({
+
+    ...motor,
+
+    price: motor.price ? Number(motor.price) : 0,
+
+    purchase_price: motor.purchase_price ? Number(motor.purchase_price) : 0,
+
+    mileage: motor.mileage ? Number(motor.mileage) : 0,
+
+    year: motor.year ? Number(motor.year) : new Date().getFullYear()
+
+  }))
+
+
+
+  return normalizedData || []
 
 }
 
@@ -183,6 +202,21 @@ export async function createMotor(formData: {
     }
 
     throw new Error(`Gagal menyimpan data motor baru: ${error.message}`)
+  }
+
+
+
+  // 🛠️ PENYELAMAT MUTASI TAMBAH: Normalisasi tipe data hasil insert sebelum dikembalikan ke UI Client
+
+  if (data) {
+
+    data.price = data.price ? Number(data.price) : 0
+
+    data.purchase_price = data.purchase_price ? Number(data.purchase_price) : 0
+
+    data.mileage = data.mileage ? Number(data.mileage) : 0
+
+    data.year = data.year ? Number(data.year) : formData.year
 
   }
 
@@ -274,6 +308,22 @@ export async function updateMotor(id: number, formData: {
 
 
 
+  // 🛠️ PENYELAMAT MUTASI UPDATE: Normalisasi tipe data hasil update sebelum dikembalikan ke UI Client
+
+  if (data && Array.isArray(data) && data.length > 0) {
+
+    data[0].price = data[0].price ? Number(data[0].price) : 0
+
+    data[0].purchase_price = data[0].purchase_price ? Number(data[0].purchase_price) : 0
+
+    data[0].mileage = data[0].mileage ? Number(data[0].mileage) : 0
+
+    data[0].year = data[0].year ? Number(data[0].year) : formData.year
+
+  }
+
+
+
   return data
 
 }
@@ -328,15 +378,25 @@ export async function deleteMotor(id: number) {
 
     for (const img of images) {
 
-      // Diubah untuk menembak bucket baru 'motosell'
+      // 🛠️ PENANGANAN INTEGRASI HAPUS JIKA MENGGUNAKAN VERCEL BLOB
 
-      const urlParts = img.image_url.split('/storage/v1/object/public/motosell/')
+      if (img.image_url.includes('public.blob.vercel-storage.com')) {
 
-      if (urlParts.length > 1) {
+        await del(img.image_url)
 
-        // urlParts[1] akan murni berisi 'units/nama_file.ext'
+      } else {
 
-        await supabase.storage.from('motosell').remove([urlParts[1]])
+        // Diubah untuk menembak bucket baru 'motosell'
+
+        const urlParts = img.image_url.split('/storage/v1/object/public/motosell/')
+
+        if (urlParts.length > 1) {
+
+          // urlParts[1] akan murni berisi 'units/nama_file.ext'
+
+          await supabase.storage.from('motosell').remove([urlParts[1]])
+
+        }
 
       }
 
@@ -404,47 +464,67 @@ export async function uploadMotorImages(motorId: number, files: { name: string; 
 
     const file = files[i]
 
-    const buffer = Buffer.from(file.base64, 'base64')
-
-    const fileExt = file.name.split('.').pop()
-
-    const fileName = `${motorId}_${Date.now()}_${i}.${fileExt}`
-
-    const filePath = `units/${fileName}` // <-- Tetap rapi masuk ke sub-folder units/
+    let finalPublicUrl = ''
 
 
 
-    // Diubah menembak ke bucket master 'motosell'
+    // 🛠️ JEMBATAN KONEKTOR VERCEL BLOB: Deteksi kiriman Direct Client Upload dari browser form admin page.tsx
 
-    const { error: uploadError } = await supabase.storage
+    if (file.base64.startsWith('VERCEL_BLOB_URL:')) {
 
-      .from('motosell')
+      finalPublicUrl = file.base64.replace('VERCEL_BLOB_URL:', '')
 
-      .upload(filePath, buffer, {
+    } else {
 
-        contentType: file.type,
+      // JALUR LAMA SUPABASE STORAGE (Tetap aman sebagai fallback jika biner Base64 terpicu)
 
-        upsert: true
+      const buffer = Buffer.from(file.base64, 'base64')
 
-      })
+      const fileExt = file.name.split('.').pop()
+
+      const fileName = `${motorId}_${Date.now()}_${i}.${fileExt}`
+
+      const filePath = `units/${fileName}` // <-- Tetap rapi masuk ke sub-folder units/
 
 
 
-    if (uploadError) {
+      // Diubah menembak ke bucket master 'motosell'
 
-      throw new Error(`Gagal mengunggah foto ke storage: ${uploadError.message}`)
+      const { error: uploadError } = await supabase.storage
+
+        .from('motosell')
+
+        .upload(filePath, buffer, {
+
+          contentType: file.type,
+
+          upsert: true
+
+        })
+
+
+
+      if (uploadError) {
+
+        throw new Error(`Gagal mengunggah foto ke storage: ${uploadError.message}`)
+
+      }
+
+
+
+      // Diubah mengambil Public URL dari bucket master 'motosell'
+
+      const { data: publicUrlData } = supabase.storage
+
+        .from('motosell')
+
+        .getPublicUrl(filePath)
+
+
+
+      finalPublicUrl = publicUrlData.publicUrl
 
     }
-
-
-
-    // Diubah mengambil Public URL dari bucket master 'motosell'
-
-    const { data: publicUrlData } = supabase.storage
-
-      .from('motosell')
-
-      .getPublicUrl(filePath)
 
 
 
@@ -462,7 +542,7 @@ export async function uploadMotorImages(motorId: number, files: { name: string; 
 
           motor_id: motorId,
 
-          image_url: publicUrlData.publicUrl,
+          image_url: finalPublicUrl,
 
           is_primary: isPrimary,
 
@@ -532,17 +612,27 @@ export async function deleteMotorImage(imageId: number, imageUrl: string) {
 
 
 
-  // Diubah untuk memotong URL publik berdasarkan nama bucket master 'motosell'
+  // 🛠️ PENANGANAN INTEGRASI HAPUS SATUAN JIKA MENGGUNAKAN VERCEL BLOB
 
-  const urlParts = imageUrl.split('/storage/v1/object/public/motosell/')
+  if (imageUrl.includes('public.blob.vercel-storage.com')) {
 
-  if (urlParts.length > 1) {
+    await del(imageUrl)
 
-    const filePath = urlParts[1] // berisi 'units/nama_file.ext'
+  } else {
 
-    // Hapus file fisik di Storage bucket 'motosell'
+    // Diubah untuk memotong URL publik berdasarkan nama bucket master 'motosell'
 
-    await supabase.storage.from('motosell').remove([filePath])
+    const urlParts = imageUrl.split('/storage/v1/object/public/motosell/')
+
+    if (urlParts.length > 1) {
+
+      const filePath = urlParts[1] // berisi 'units/nama_file.ext'
+
+      // Hapus file fisik di Storage bucket 'motosell'
+
+      await supabase.storage.from('motosell').remove([filePath])
+
+    }
 
   }
 
