@@ -7,34 +7,45 @@ import { createClientServer } from '@/lib/supabase'
 
 
 // 1. Ambil Semua Data Motor beserta Data Brand-nya (Read)
+
 export async function getMotors() {
+
   const supabase = await createClientServer()
 
+
+
   const { data, error } = await supabase
+
     .from('motors')
+
     .select(`
+
       *,
+
       brands (
+
         name,
+
         code
+
       )
+
     `)
+
     .order('created_at', { ascending: false })
 
+
+
   if (error) {
+
     throw new Error(`Gagal mengambil data motor: ${error.message}`)
+
   }
 
-  // 🛠️ SUNTIKAN KHUSUS: Paksa string numeric Supabase menjadi format Angka murni JavaScript
-  const normalizedData = data?.map((motor: any) => ({
-    ...motor,
-    price: motor.price ? Number(motor.price) : 0,
-    purchase_price: motor.purchase_price ? Number(motor.purchase_price) : 0,
-    mileage: motor.mileage ? Number(motor.mileage) : 0,
-    year: motor.year ? Number(motor.year) : new Date().getFullYear()
-  }))
 
-  return normalizedData || []
+
+  return data
+
 }
 
 
