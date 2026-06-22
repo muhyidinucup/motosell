@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { getBrands } from '@/actions/brand'
 import { getMotors, createMotor, updateMotor, deleteMotor, uploadMotorImages, getMotorImages, deleteMotorImage } from '@/actions/motor'
@@ -7,7 +6,7 @@ import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload, Downlo
 // @ts-ignore
 import imageCompression from 'browser-image-compression'
 import * as XLSX from 'xlsx'
-import { upload } from '@vercel/blob/client' // 🛠️ SUNTIKAN UTAMA: Menggunakan fungsi Direct Upload dari Vercel Blob
+import { createClient } from '@/lib/supabase/client' // ✅ Upload langsung ke Supabase Storage
 
 interface Brand {
   id: number
@@ -33,7 +32,7 @@ interface Motor {
   brands: {
     name: string
     code: string
-  } | null // 🛠️ PENYELAMAT UTAMA: Diubah dari Array [] menjadi Objek Tunggal agar sesuai Supabase & Hilangkan Eror Server Component Render Vercel!
+  } | null
 }
 
 interface SavedImage {
@@ -45,11 +44,9 @@ interface SavedImage {
 export default function AdminMotorsPage() {
   const [motors, setMotors] = useState<Motor[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
-  
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'ready' | 'booking' | 'sold'>('all')
   const [filteredMotors, setFilteredMotors] = useState<Motor[]>([])
-
   const [brandId, setBrandId] = useState('')
   const [model, setModel] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
@@ -62,16 +59,13 @@ export default function AdminMotorsPage() {
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<'ready' | 'booking' | 'sold'>('ready')
   const [featured, setFeatured] = useState(false)
-
-  // 🛠️ DIUBAH AMAN: State selectedFiles sekarang menampung berkas biner mentah asli (File[]) untuk diunggah langsung ke Vercel Blob
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [savedImages, setSavedImages] = useState<SavedImage[]>([])
-
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('') 
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     loadInitialData()
@@ -79,7 +73,6 @@ export default function AdminMotorsPage() {
 
   useEffect(() => {
     let temp = [...motors]
-
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase()
       temp = temp.filter(m => 
@@ -114,7 +107,6 @@ export default function AdminMotorsPage() {
     .filter(m => m.status === 'ready' || m.status === 'booking')
     .reduce((sum, m) => sum + Number(m.purchase_price || 0), 0)
 
-  // 🛠️ TAMENG AMAN: CANVAS COMPRESSOR LAPIS KEDUA (FALLBACK SAKTI JIKA LIBRARY BYPASS FILE 4MB)
   const compressImageViaCanvas = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -153,10 +145,8 @@ export default function AdminMotorsPage() {
     })
   }
 
-  // 🛠️ DIUBAH AMAN: Alur fungsi disesuaikan mengumpulkan data biner asli File untuk Vercel Blob
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
-    
     const filesArray = Array.from(e.target.files)
     setErrorMessage('')
     setSuccessMessage('')
@@ -164,7 +154,7 @@ export default function AdminMotorsPage() {
 
     const options = {
       maxSizeMB: 0.3,          
-      maxWidthOrHeight: 1200,   
+      maxWidthOrHeight: 1200,    
       useWebWorker: true,
       fileType: 'image/webp'    
     }
@@ -180,19 +170,16 @@ export default function AdminMotorsPage() {
         let previewUrl = ''
 
         try {
-          // Lapis 1: Coba jalankan library browser-image-compression bawaan asli
           const compressedFile = await imageCompression(file, options)
           previewUrl = URL.createObjectURL(compressedFile)
           
           const safeName = file.name.replace(/\.[^/.]+$/, '') + '.webp'
           finalCompressedFile = new File([compressedFile], safeName, { type: 'image/webp' })
 
-          // Pengunci Keamanan: Jika library gagal dan meloloskan file bengkak di atas 2MB biner
           if (finalCompressedFile.size > 2 * 1024 * 1024) {
             throw new Error('Trigger Fallback Canvas')
           }
         } catch (compressionErr) {
-          // Lapis 2: Eksekusi Canvas Compressor Native rahasia kita untuk melibas file 4MB
           const base64String = await compressImageViaCanvas(file)
           
           const byteCharacters = atob(base64String)
@@ -231,7 +218,6 @@ export default function AdminMotorsPage() {
       setErrorMessage('Silakan pilih brand motor terlebih dahulu!')
       return
     }
-
     if (!editingId && selectedFiles.length === 0) {
       setErrorMessage('Wajib mengunggah minimal 1 foto untuk unit motor baru!')
       return
@@ -239,24 +225,35 @@ export default function AdminMotorsPage() {
 
     setIsLoading(true)
     setErrorMessage('')
-    setSuccessMessage('') 
+    setSuccessMessage('')
 
     try {
-      // 🛠️ DIUBAH AMAN: Unggah biner langsung via browser ke server Vercel Blob menggunakan client upload
-      const uploadedImagePayloads: { name: string; type: string; base64: string }[] = []
-      
+      const supabase = createClient()
+      const uploadedImageUrls: string[] = []
+
+      // 🚀 UPLOAD LANGSUNG DARI BROWSER KE SUPABASE STORAGE
+      // File TIDAK PERNAH menyentuh server Vercel → bebas limit 4MB!
       for (const file of selectedFiles) {
-        const blobResult = await upload(file.name, file, {
-          access: 'public',
-          handleUploadUrl: '/api/avatar/upload', 
-        })
-        
-        // Kirimkan tanda khusus VERCEL_BLOB_URL agar backend peka memisahkan link data
-        uploadedImagePayloads.push({
-          name: file.name,
-          type: file.type,
-          base64: `VERCEL_BLOB_URL:${blobResult.url}` 
-        })
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`
+        const filePath = `units/${fileName}`
+
+        const { data, error } = await supabase.storage
+          .from('motosell')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          })
+
+        if (error) {
+          throw new Error(`Gagal upload gambar "${file.name}": ${error.message}`)
+        }
+
+        // Ambil public URL
+        const { data: urlData } = supabase.storage
+          .from('motosell')
+          .getPublicUrl(filePath)
+
+        uploadedImageUrls.push(urlData.publicUrl)
       }
 
       const payload = {
@@ -275,19 +272,20 @@ export default function AdminMotorsPage() {
 
       if (editingId) {
         await updateMotor(editingId, { ...payload, status })
-        if (uploadedImagePayloads.length > 0) {
-          await uploadMotorImages(editingId, uploadedImagePayloads)
+        if (uploadedImageUrls.length > 0) {
+          await uploadMotorImages(editingId, uploadedImageUrls)
         }
-        setSuccessMessage('Berhasil! Perubahan data unit motor telah disimpan.') 
+        setSuccessMessage('Berhasil! Perubahan data unit motor telah disimpan.')
         setEditingId(null)
       } else {
         const newMotor = await createMotor(payload)
         if (newMotor && newMotor.id) {
-          await uploadMotorImages(newMotor.id, uploadedImagePayloads)
+          await uploadMotorImages(newMotor.id, uploadedImageUrls)
         }
-        setSuccessMessage('Berhasil! Unit motor baru telah ditambahkan ke inventori.') 
+        setSuccessMessage('Berhasil! Unit motor baru telah ditambahkan ke inventori.')
       }
 
+      // Reset form
       setBrandId('')
       setModel('')
       setPrice('')
@@ -300,7 +298,7 @@ export default function AdminMotorsPage() {
       setSelectedFiles([])
       setPreviews([])
       setSavedImages([])
-      
+
       const updatedMotors = await getMotors()
       setMotors(updatedMotors as unknown as Motor[])
     } catch (error: any) {
@@ -325,10 +323,9 @@ export default function AdminMotorsPage() {
     setDescription(motor.description || '')
     setStatus(motor.status)
     setFeatured(motor.featured)
-    
     setSelectedFiles([])
     setPreviews([])
-    setSuccessMessage('') 
+    setSuccessMessage('')
 
     await fetchSavedImages(motor.id)
   }
@@ -344,7 +341,6 @@ export default function AdminMotorsPage() {
 
   async function handleImageDelete(imageId: number, imageUrl: string) {
     if (!confirm('Apakah Anda yakin ingin menghapus foto ini dari galeri database?')) return
-    
     try {
       await deleteMotorImage(imageId, imageUrl)
       if (editingId) {
@@ -375,7 +371,6 @@ export default function AdminMotorsPage() {
 
   async function handleDelete(id: number, code: string) {
     if (!confirm(`Apakah Anda yakin ingin menghapus motor dengan kode "${code}"?`)) return
-
     setIsLoading(true)
     setErrorMessage('')
     setSuccessMessage('')
@@ -383,7 +378,7 @@ export default function AdminMotorsPage() {
       await deleteMotor(id)
       const updatedMotors = await getMotors()
       setMotors(updatedMotors as unknown as Motor[])
-      setSuccessMessage(`Berhasil menghapus unit motor ${code} dari inventori.`) 
+      setSuccessMessage(`Berhasil menghapus unit motor ${code} dari inventori.`)
     } catch (error: any) {
       setErrorMessage(error.message)
     } finally {
@@ -393,7 +388,6 @@ export default function AdminMotorsPage() {
 
   const exportInventoryToExcel = () => {
     if (filteredMotors.length === 0) return alert('Tidak ada data unit motor terfilter untuk diekspor, Chief!')
-
     const excelRows = filteredMotors.map((motor, index) => ({
       'No': index + 1,
       'Kode Motor (ID)': motor.motor_code,
@@ -414,7 +408,7 @@ export default function AdminMotorsPage() {
     const worksheet = XLSX.utils.json_to_sheet(excelRows)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Inventori Motor')
-    
+
     const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
     XLSX.writeFile(workbook, `Data_Stok_Inventori_MotoSell_${todayStr}.xlsx`)
   }
@@ -746,7 +740,7 @@ export default function AdminMotorsPage() {
               <h2 className="text-base sm:text-lg font-bold tracking-wide">Inventori Motor Toko</h2>
               <p className="text-xs text-indigo-200/70 font-medium mt-0.5">Menampilkan: {filteredMotors.length} dari {motors.length} total unit</p>
             </div>
-            
+          
             <button
               onClick={exportInventoryToExcel}
               type="button"
