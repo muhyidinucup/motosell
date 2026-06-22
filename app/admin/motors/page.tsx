@@ -6,7 +6,7 @@ import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload, Downlo
 // @ts-ignore
 import imageCompression from 'browser-image-compression'
 import * as XLSX from 'xlsx'
-import { createClient } from '@/lib/supabase/client' // ✅ Upload langsung ke Supabase Storage
+import { createClient } from '@/lib/supabase'
 
 interface Brand {
   id: number
