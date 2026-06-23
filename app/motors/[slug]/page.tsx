@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getMotorDetailBySlug } from '@/actions/public'
 import { getStoreSettings } from '@/actions/settings'
-import { ChevronLeft, ArrowLeft } from 'lucide-react'
+import { ChevronLeft, Camera, Phone, ShieldAlert } from 'lucide-react'
 import MotorDetailClient from './MotorDetailClient'
 
 interface PageProps {
