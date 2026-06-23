@@ -6,7 +6,20 @@ import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload, Downlo
 // @ts-ignore
 import imageCompression from 'browser-image-compression'
 import * as XLSX from 'xlsx'
-import { createClient } from '@/lib/supabase/client' // ✅ PENTING: Import dari /client
+import { createClient } from '@/lib/supabase/client'
+
+// ✅ UTILITY: Format angka ke string dengan pemisah ribuan Indonesia
+function formatRupiahInput(value: number | string): string {
+  const num = typeof value === 'string' ? parseFloat(value.replace(/\./g, '')) : value
+  if (isNaN(num) || num === 0) return ''
+  return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(num)
+}
+
+// ✅ UTILITY: Parse string bertitik kembali ke angka murni
+function parseRupiahInput(value: string): number {
+  const cleaned = value.replace(/\./g, '').replace(/[^0-9]/g, '')
+  return cleaned === '' ? 0 : parseInt(cleaned, 10)
+}
 
 interface Brand {
   id: number
@@ -50,8 +63,11 @@ export default function AdminMotorsPage() {
   const [brandId, setBrandId] = useState('')
   const [model, setModel] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
-  const [purchasePrice, setPurchasePrice] = useState('')
-  const [price, setPrice] = useState('')
+  
+  // ✅ STATE TERPISAH: Display (formatted string) vs Actual (number for submit)
+  const [displayPurchasePrice, setDisplayPurchasePrice] = useState('')
+  const [displayPrice, setDisplayPrice] = useState('')
+  
   const [mileage, setMileage] = useState('')
   const [transmission, setTransmission] = useState('Automatic')
   const [color, setColor] = useState('')
@@ -212,6 +228,17 @@ export default function AdminMotorsPage() {
     }
   }
 
+  // ✅ HANDLER: Format harga real-time saat user mengetik
+  const handlePurchasePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '')
+    setDisplayPurchasePrice(rawValue === '' ? '' : formatRupiahInput(parseInt(rawValue, 10)))
+  }
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '')
+    setDisplayPrice(rawValue === '' ? '' : formatRupiahInput(parseInt(rawValue, 10)))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!brandId) {
@@ -231,7 +258,6 @@ export default function AdminMotorsPage() {
       const supabase = createClient()
       const uploadedImageUrls: string[] = []
 
-      // 🚀 UPLOAD LANGSUNG DARI BROWSER KE SUPABASE STORAGE
       for (const file of selectedFiles) {
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`
         const filePath = `units/${fileName}`
@@ -254,12 +280,13 @@ export default function AdminMotorsPage() {
         uploadedImageUrls.push(urlData.publicUrl)
       }
 
+      // ✅ Parse display string kembali ke angka murni untuk submit
       const payload = {
         brand_id: Number(brandId),
         model,
         year: Number(year),
-        price: Number(price),
-        purchase_price: Number(purchasePrice),
+        price: parseRupiahInput(displayPrice),
+        purchase_price: parseRupiahInput(displayPurchasePrice),
         mileage: Number(mileage),
         transmission,
         color,
@@ -283,10 +310,11 @@ export default function AdminMotorsPage() {
         setSuccessMessage('Berhasil! Unit motor baru telah ditambahkan ke inventori.')
       }
 
+      // Reset form
       setBrandId('')
       setModel('')
-      setPrice('')
-      setPurchasePrice('')
+      setDisplayPurchasePrice('')
+      setDisplayPrice('')
       setMileage('')
       setColor('')
       setDescription('')
@@ -311,8 +339,11 @@ export default function AdminMotorsPage() {
     setBrandId(String(motor.brand_id))
     setModel(motor.model)
     setYear(motor.year)
-    setPurchasePrice(String(motor.purchase_price || ''))
-    setPrice(String(motor.price))
+    
+    // ✅ Auto-format harga saat load data edit
+    setDisplayPurchasePrice(motor.purchase_price ? formatRupiahInput(motor.purchase_price) : '')
+    setDisplayPrice(motor.price ? formatRupiahInput(motor.price) : '')
+    
     setMileage(String(motor.mileage))
     setTransmission(motor.transmission)
     setColor(motor.color)
@@ -352,8 +383,8 @@ export default function AdminMotorsPage() {
     setEditingId(null)
     setBrandId('')
     setModel('')
-    setPurchasePrice('')
-    setPrice('')
+    setDisplayPurchasePrice('')
+    setDisplayPrice('')
     setMileage('')
     setColor('')
     setDescription('')
@@ -531,27 +562,30 @@ export default function AdminMotorsPage() {
               </div>
             </div>
 
+            {/* ✅ INPUT HARGA DENGAN FORMAT RUPIAH OTOMATIS */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-emerald-400'}`}>Harga Modal (Rp)</label>
                 <input
-                  type="number"
-                  placeholder="Contoh: 15000000"
-                  value={purchasePrice}
-                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Contoh: 15.000.000"
+                  value={displayPurchasePrice}
+                  onChange={handlePurchasePriceChange}
                   required
-                  className="w-full px-4 py-2.5 bg-emerald-900/20 border border-emerald-500/30 rounded-xl text-emerald-100 text-sm placeholder-emerald-100/30 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-4 py-2.5 bg-emerald-900/20 border border-emerald-500/30 rounded-xl text-emerald-100 text-sm placeholder-emerald-100/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono tracking-wide"
                 />
               </div>
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-indigo-300'}`}>Harga Jual (Rp)</label>
                 <input
-                  type="number"
-                  placeholder="Contoh: 17500000"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Contoh: 17.500.000"
+                  value={displayPrice}
+                  onChange={handlePriceChange}
                   required
-                  className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono tracking-wide"
                 />
               </div>
             </div>
