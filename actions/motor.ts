@@ -29,7 +29,7 @@ export async function getMotors() {
   return normalizedData || []
 }
 
-// 2. Generator Kode Motor Otomatis
+// 2. Generator Kode Motor Otomatis (Auto-generate Motor Code)
 export async function generateMotorCode(brandId: number) {
   const supabase = await createClientServer()
   const { data: brand, error: brandError } = await supabase
@@ -42,16 +42,30 @@ export async function generateMotorCode(brandId: number) {
     throw new Error('Brand tidak ditemukan untuk membuat kode motor.')
   }
 
-  const { count, error: countError } = await supabase
+  // 🔧 PERBAIKAN: Cari nomor urut TER TINGGI yang sudah ada, bukan count
+  const { data: motors, error: motorsError } = await supabase
     .from('motors')
-    .select('*', { count: 'exact', head: true })
+    .select('motor_code')
     .eq('brand_id', brandId)
+    .order('motor_code', { ascending: false })
+    .limit(1)
 
-  if (countError) {
-    throw new Error(`Gagal menghitung urutan kode: ${countError.message}`)
+  if (motorsError) {
+    throw new Error(`Gagal mengambil data motor: ${motorsError.message}`)
   }
 
-  const nextSequence = (count || 0) + 1
+  let nextSequence = 1
+
+  if (motors && motors.length > 0 && motors[0].motor_code) {
+    // Extract angka dari motor_code terakhir (misal: "HND-002" → 2)
+    const lastCode = motors[0].motor_code
+    const match = lastCode.match(/-(\d+)$/)
+    if (match) {
+      const lastNumber = parseInt(match[1], 10)
+      nextSequence = lastNumber + 1
+    }
+  }
+
   const formattedSequence = String(nextSequence).padStart(3, '0')
   return `${brand.code}-${formattedSequence}`
 }
