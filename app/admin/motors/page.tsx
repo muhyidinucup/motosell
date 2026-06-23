@@ -6,7 +6,7 @@ import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload, Downlo
 // @ts-ignore
 import imageCompression from 'browser-image-compression'
 import * as XLSX from 'xlsx'
-import { createClient } from '@/lib/supabase/client' // ✅ INI WAJIB: dari /client, BUKAN dari /supabase
+import { createClient } from '@/lib/supabase/client' // ✅ PENTING: Import dari /client
 
 interface Brand {
   id: number
@@ -231,6 +231,7 @@ export default function AdminMotorsPage() {
       const supabase = createClient()
       const uploadedImageUrls: string[] = []
 
+      // 🚀 UPLOAD LANGSUNG DARI BROWSER KE SUPABASE STORAGE
       for (const file of selectedFiles) {
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`
         const filePath = `units/${fileName}`
@@ -294,7 +295,7 @@ export default function AdminMotorsPage() {
       setSelectedFiles([])
       setPreviews([])
       setSavedImages([])
-
+      
       const updatedMotors = await getMotors()
       setMotors(updatedMotors as unknown as Motor[])
     } catch (error: any) {
@@ -321,7 +322,7 @@ export default function AdminMotorsPage() {
     setFeatured(motor.featured)
     setSelectedFiles([])
     setPreviews([])
-    setSuccessMessage('')
+    setSuccessMessage('') 
 
     await fetchSavedImages(motor.id)
   }
@@ -374,7 +375,7 @@ export default function AdminMotorsPage() {
       await deleteMotor(id)
       const updatedMotors = await getMotors()
       setMotors(updatedMotors as unknown as Motor[])
-      setSuccessMessage(`Berhasil menghapus unit motor ${code} dari inventori.`)
+      setSuccessMessage(`Berhasil menghapus unit motor ${code} dari inventori.`) 
     } catch (error: any) {
       setErrorMessage(error.message)
     } finally {
@@ -626,7 +627,7 @@ export default function AdminMotorsPage() {
               <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${editingId ? 'text-amber-200' : 'text-slate-400'}`}>
                 {editingId ? 'Tambah File Foto Baru' : 'Upload Foto Unit (Min. 1 Foto)'}
               </label>
-              <div className="relative w-full min-h-22.5 border-2 border-dashed border-white/20 hover:border-indigo-400 rounded-xl transition flex flex-col items-center justify-center p-3 cursor-pointer bg-white/5">
+              <div className="relative w-full min-h-24 border-2 border-dashed border-white/20 hover:border-indigo-400 rounded-xl transition flex flex-col items-center justify-center p-3 cursor-pointer bg-white/5">
                 <input
                   type="file"
                   multiple
@@ -731,7 +732,7 @@ export default function AdminMotorsPage() {
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="p-5 bg-linear-to-r from-slate-900 to-indigo-950 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-base sm:text-lg font-bold tracking-wide">Inventori Motor Toko</h2>
               <p className="text-xs text-indigo-200/70 font-medium mt-0.5">Menampilkan: {filteredMotors.length} dari {motors.length} total unit</p>
@@ -792,7 +793,7 @@ export default function AdminMotorsPage() {
                 {filteredMotors.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-400 text-sm font-medium">
-                      Tidak ada unit motor yang cocok dengan pencarian or filter dropdown status pilihan Anda.
+                      Tidak ada unit motor yang cocok dengan pencarian atau filter status Anda.
                     </td>
                   </tr>
                 ) : (

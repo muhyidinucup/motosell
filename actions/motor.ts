@@ -171,6 +171,7 @@ export async function deleteMotor(id: number) {
 
   if (images && images.length > 0) {
     for (const img of images) {
+      // Hapus file fisik di Supabase Storage bucket 'motosell'
       const urlParts = img.image_url.split('/storage/v1/object/public/motosell/')
       if (urlParts.length > 1) {
         await supabase.storage.from('motosell').remove([urlParts[1]])
@@ -191,7 +192,7 @@ export async function deleteMotor(id: number) {
   return true
 }
 
-// 6. Simpan URL Gambar ke Database
+// 6. Simpan URL Gambar ke Database (File sudah di-upload dari client langsung ke Supabase)
 export async function uploadMotorImages(motorId: number, imageUrls: string[]) {
   const supabase = await createClientServer()
   const { data: existingImages } = await supabase
