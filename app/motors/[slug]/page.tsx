@@ -89,9 +89,28 @@ export default async function MotorDetailPage({ params }: PageProps) {
     getStoreSettings()
   ])
 
-  // Jika motor tidak ditemukan atau sudah sold, tampilkan 404
-  if (!motor || motor.status !== 'ready') {
-    notFound()
+    // Handle Next.js 15+ params Promise
+  const slugValue = typeof params.slug === 'string' ? params.slug : (await params).slug;
+
+  if (!motor) {
+    return (
+      <div className="min-h-screen bg-red-900 text-white flex flex-col items-center justify-center p-10">
+        <h1 className="text-4xl font-black mb-4">DEBUG: MOTOR TIDAK KETEMU!</h1>
+        <p className="text-xl">Slug yang dicari sistem: <span className="bg-black p-2 rounded font-mono text-yellow-400">{String(slugValue)}</span></p>
+        <p className="mt-4 text-center max-w-md">Cek tabel 'motors' di Supabase. Apakah ada motor dengan kolom 'slug' yang ejaannya PERSIS sama dengan teks kuning di atas?</p>
+      </div>
+    )
+  }
+
+  if (motor.status !== 'ready') {
+    return (
+      <div className="min-h-screen bg-orange-900 text-white flex flex-col items-center justify-center p-10">
+        <h1 className="text-4xl font-black mb-4">DEBUG: MOTOR KETEMU, TAPI STATUS BUKAN READY!</h1>
+        <p className="text-xl">Motor: {motor.model}</p>
+        <p className="text-xl mt-2">Status saat ini: <span className="bg-black p-2 rounded font-mono text-yellow-400 uppercase">{motor.status}</span></p>
+        <p className="mt-4 text-center max-w-md">Sistem menyembunyikan motor yang tidak 'ready'. Ubah statusnya di Supabase jadi 'ready', maka halaman langsung muncul!</p>
+      </div>
+    )
   }
 
   const primaryImage = motor.motor_images?.find((img: any) => img.is_primary)?.image_url || 
