@@ -6,7 +6,7 @@ import { Pencil, Trash2, Plus, Bike, Calendar, Gauge, Sliders, X, Upload, Downlo
 // @ts-ignore
 import imageCompression from 'browser-image-compression'
 import * as XLSX from 'xlsx'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client' // ✅ INI WAJIB: dari /client, BUKAN dari /supabase
 
 interface Brand {
   id: number
@@ -231,8 +231,6 @@ export default function AdminMotorsPage() {
       const supabase = createClient()
       const uploadedImageUrls: string[] = []
 
-      // 🚀 UPLOAD LANGSUNG DARI BROWSER KE SUPABASE STORAGE
-      // File TIDAK PERNAH menyentuh server Vercel → bebas limit 4MB!
       for (const file of selectedFiles) {
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`
         const filePath = `units/${fileName}`
@@ -248,7 +246,6 @@ export default function AdminMotorsPage() {
           throw new Error(`Gagal upload gambar "${file.name}": ${error.message}`)
         }
 
-        // Ambil public URL
         const { data: urlData } = supabase.storage
           .from('motosell')
           .getPublicUrl(filePath)
@@ -285,7 +282,6 @@ export default function AdminMotorsPage() {
         setSuccessMessage('Berhasil! Unit motor baru telah ditambahkan ke inventori.')
       }
 
-      // Reset form
       setBrandId('')
       setModel('')
       setPrice('')

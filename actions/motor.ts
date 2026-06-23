@@ -154,7 +154,6 @@ export async function updateMotor(id: number, formData: {
 export async function deleteMotor(id: number) {
   const supabase = await createClientServer()
 
-  // Proteksi keuangan
   const { data: checkSale } = await supabase
     .from('sales')
     .select('id')
@@ -165,7 +164,6 @@ export async function deleteMotor(id: number) {
     throw new Error('SISTEM MEMBLOKIR: Unit motor ini sudah laku dan tercatat di Laporan Keuangan. Hapus riwayat penjualannya di menu Kasir terlebih dahulu.')
   }
 
-  // Ambil data gambar untuk hapus file fisik
   const { data: images } = await supabase
     .from('motor_images')
     .select('image_url')
@@ -173,7 +171,6 @@ export async function deleteMotor(id: number) {
 
   if (images && images.length > 0) {
     for (const img of images) {
-      // Hapus file fisik di Supabase Storage bucket 'motosell'
       const urlParts = img.image_url.split('/storage/v1/object/public/motosell/')
       if (urlParts.length > 1) {
         await supabase.storage.from('motosell').remove([urlParts[1]])
@@ -181,10 +178,8 @@ export async function deleteMotor(id: number) {
     }
   }
 
-  // Hapus data teks di tabel gambar
   await supabase.from('motor_images').delete().eq('motor_id', id)
 
-  // Hapus data motor utama
   const { error: motorError } = await supabase
     .from('motors')
     .delete()
@@ -196,7 +191,7 @@ export async function deleteMotor(id: number) {
   return true
 }
 
-// 6. Simpan URL Gambar ke Database (File sudah di-upload dari client langsung ke Supabase)
+// 6. Simpan URL Gambar ke Database
 export async function uploadMotorImages(motorId: number, imageUrls: string[]) {
   const supabase = await createClientServer()
   const { data: existingImages } = await supabase
@@ -245,13 +240,11 @@ export async function getMotorImages(motorId: number) {
 export async function deleteMotorImage(imageId: number, imageUrl: string) {
   const supabase = await createClientServer()
 
-  // Hapus file fisik di Supabase Storage
   const urlParts = imageUrl.split('/storage/v1/object/public/motosell/')
   if (urlParts.length > 1) {
     await supabase.storage.from('motosell').remove([urlParts[1]])
   }
 
-  // Hapus data baris di database
   const { error } = await supabase
     .from('motor_images')
     .delete()
