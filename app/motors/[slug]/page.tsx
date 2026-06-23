@@ -6,14 +6,17 @@ import { getStoreSettings } from '@/actions/settings'
 import { ChevronLeft, Camera, Phone, ShieldAlert } from 'lucide-react'
 import MotorDetailClient from './MotorDetailClient'
 
+// ✅ PERBAIKAN NEXT.JS 15+: params adalah Promise!
 interface PageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
-// ✅ SEO METADATA DINAMIS - Berbeda untuk setiap motor!
+// ✅ SEO METADATA DINAMIS
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params // ✅ WAJIB DI-AWAIT DI SINI!
+
   try {
-    const motor = await getMotorDetailBySlug(params.slug)
+    const motor = await getMotorDetailBySlug(slug) // ✅ Pakai 'slug', BUKAN 'params.slug'
 
     if (!motor) {
       return {
@@ -50,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       openGraph: {
         type: 'website',
         locale: 'id_ID',
-        url: `https://motosell.vercel.app/motors/${params.slug}`,
+        url: `https://motosell.vercel.app/motors/${slug}`,
         siteName: 'MotoSell Premium Showroom',
         title,
         description,
@@ -70,7 +73,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         images: [primaryImage],
       },
       alternates: {
-        canonical: `https://motosell.vercel.app/motors/${params.slug}`,
+        canonical: `https://motosell.vercel.app/motors/${slug}`,
       },
     }
   } catch (error) {
@@ -81,36 +84,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-// ✅ SERVER COMPONENT - Data di-fetch di server untuk SEO
+// ✅ SERVER COMPONENT
 export default async function MotorDetailPage({ params }: PageProps) {
-  // Fetch data di server-side
+  const { slug } = await params // ✅ WAJIB DI-AWAIT DI SINI!
+
+  // Fetch data di server-side pakai 'slug' yang sudah valid
   const [motor, storeConfig] = await Promise.all([
-    getMotorDetailBySlug(params.slug),
+    getMotorDetailBySlug(slug), // ✅ Pakai 'slug', BUKAN 'params.slug'
     getStoreSettings()
   ])
 
-    // Handle Next.js 15+ params Promise
-  const slugValue = typeof params.slug === 'string' ? params.slug : (await params).slug;
-
-  if (!motor) {
-    return (
-      <div className="min-h-screen bg-red-900 text-white flex flex-col items-center justify-center p-10">
-        <h1 className="text-4xl font-black mb-4">DEBUG: MOTOR TIDAK KETEMU!</h1>
-        <p className="text-xl">Slug yang dicari sistem: <span className="bg-black p-2 rounded font-mono text-yellow-400">{String(slugValue)}</span></p>
-        <p className="mt-4 text-center max-w-md">Cek tabel 'motors' di Supabase. Apakah ada motor dengan kolom 'slug' yang ejaannya PERSIS sama dengan teks kuning di atas?</p>
-      </div>
-    )
-  }
-
-  if (motor.status !== 'ready') {
-    return (
-      <div className="min-h-screen bg-orange-900 text-white flex flex-col items-center justify-center p-10">
-        <h1 className="text-4xl font-black mb-4">DEBUG: MOTOR KETEMU, TAPI STATUS BUKAN READY!</h1>
-        <p className="text-xl">Motor: {motor.model}</p>
-        <p className="text-xl mt-2">Status saat ini: <span className="bg-black p-2 rounded font-mono text-yellow-400 uppercase">{motor.status}</span></p>
-        <p className="mt-4 text-center max-w-md">Sistem menyembunyikan motor yang tidak 'ready'. Ubah statusnya di Supabase jadi 'ready', maka halaman langsung muncul!</p>
-      </div>
-    )
+  // Jika motor tidak ditemukan atau bukan ready, tampilkan 404
+  if (!motor || motor.status !== 'ready') {
+    notFound()
   }
 
   const primaryImage = motor.motor_images?.find((img: any) => img.is_primary)?.image_url || 
@@ -131,7 +117,7 @@ export default async function MotorDetailPage({ params }: PageProps) {
     },
     offers: {
       '@type': 'Offer',
-      url: `https://motosell.vercel.app/motors/${params.slug}`,
+      url: `https://motosell.vercel.app/motors/${slug}`,
       priceCurrency: 'IDR',
       price: motor.price,
       availability: 'https://schema.org/InStock',
