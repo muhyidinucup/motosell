@@ -240,43 +240,65 @@ export default function PublicHomepage() {
           </div>
         )}
 
-        {/* 🎬 DYNAMIC BANNER SLIDER SECTION */}
+        {/* 🎬 DYNAMIC BANNER SLIDER SECTION - ASPECT RATIO 16:9 */}
         <div className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 relative group">
           {banners.length === 0 ? (
-            <div className={`w-full h-48 md:h-80 rounded-3xl border flex items-center justify-center font-medium ${
+            <div className={`w-full aspect-video rounded-3xl border flex items-center justify-center font-medium ${
               theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400 shadow-2xs'
             }`}>
               Belum ada spanduk promo aktif yang di-publish.
             </div>
           ) : (
-            <div className={`w-full h-48 sm:h-64 md:h-96 relative overflow-hidden rounded-3xl border shadow-2xl ${
+            <div className={`w-full aspect-video relative overflow-hidden rounded-3xl border shadow-2xl ${
               theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
             }`}>
               <img 
                 src={banners[currentBanner]?.image_url} 
-                alt={banners[currentBanner]?.title}
+                alt={banners[currentBanner]?.title || 'Banner Promo MotoSell'}
                 className="w-full h-full object-cover select-none transition-all duration-700 ease-in-out" 
               />
               
-              <div className={`absolute inset-0 p-6 md:p-10 ${
-                theme === 'dark' ? 'bg-gradient-to-t from-slate-950 via-slate-950/10 to-transparent' : 'bg-gradient-to-t from-white via-white/5 to-transparent'
+              {/* Gradient Overlay */}
+              <div className={`absolute inset-0 p-6 md:p-10 pointer-events-none ${
+                theme === 'dark' ? 'bg-gradient-to-t from-slate-950/80 via-transparent to-transparent' : 'bg-gradient-to-t from-black/30 via-transparent to-transparent'
               }`} />
 
+              {/* Navigasi Panah (hanya muncul jika > 1 banner) */}
               {banners.length > 1 && (
                 <>
                   <button 
                     onClick={() => setCurrentBanner((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-slate-900/70 border border-white/10 rounded-full text-white opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm border border-white/20 rounded-full text-white opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer z-10"
+                    aria-label="Banner sebelumnya"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button 
                     onClick={() => setCurrentBanner((prev) => (prev + 1) % banners.length)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-slate-900/70 border border-white/10 rounded-full text-white opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm border border-white/20 rounded-full text-white opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer z-10"
+                    aria-label="Banner selanjutnya"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </>
+              )}
+
+              {/* Indikator Titik (Dots) */}
+              {banners.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                  {banners.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentBanner(idx)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        idx === currentBanner 
+                          ? 'bg-white w-6' 
+                          : 'bg-white/50 hover:bg-white/80'
+                      }`}
+                      aria-label={`Go to banner ${idx + 1}`}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           )}
