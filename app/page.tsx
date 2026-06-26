@@ -240,16 +240,16 @@ export default function PublicHomepage() {
           </div>
         )}
 
-        {/* 🎬 DYNAMIC BANNER SLIDER SECTION - ASPECT RATIO 16:9 */}
+        {/* 🎬 DYNAMIC BANNER SLIDER SECTION */}
         <div className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 relative group">
           {banners.length === 0 ? (
-            <div className={`w-full aspect-video rounded-3xl border flex items-center justify-center font-medium ${
+            <div className={`w-full aspect-video sm:h-64 md:h-80 rounded-3xl border flex items-center justify-center font-medium ${
               theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400 shadow-2xs'
             }`}>
               Belum ada spanduk promo aktif yang di-publish.
             </div>
           ) : (
-            <div className={`w-full aspect-video relative overflow-hidden rounded-3xl border shadow-2xl ${
+            <div className={`w-full aspect-video sm:h-64 md:h-80 relative overflow-hidden rounded-3xl border shadow-2xl ${
               theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
             }`}>
               <img 
@@ -259,11 +259,11 @@ export default function PublicHomepage() {
               />
               
               {/* Gradient Overlay */}
-              <div className={`absolute inset-0 p-6 md:p-10 pointer-events-none ${
+              <div className={`absolute inset-0 pointer-events-none ${
                 theme === 'dark' ? 'bg-gradient-to-t from-slate-950/80 via-transparent to-transparent' : 'bg-gradient-to-t from-black/30 via-transparent to-transparent'
               }`} />
 
-              {/* Navigasi Panah (hanya muncul jika > 1 banner) */}
+              {/* Navigasi Panah */}
               {banners.length > 1 && (
                 <>
                   <button 
@@ -283,17 +283,17 @@ export default function PublicHomepage() {
                 </>
               )}
 
-              {/* Indikator Titik (Dots) */}
+              {/* Indikator Dots */}
               {banners.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                   {banners.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setCurrentBanner(idx)}
-                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
                         idx === currentBanner 
                           ? 'bg-white w-6' 
-                          : 'bg-white/50 hover:bg-white/80'
+                          : 'bg-white/50 hover:bg-white/80 w-2.5'
                       }`}
                       aria-label={`Go to banner ${idx + 1}`}
                     />
